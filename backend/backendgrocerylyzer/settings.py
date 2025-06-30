@@ -39,7 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'api',
+    'users'
+    'receipts',
+    'analytics'
 ]
 
 MIDDLEWARE = [
@@ -53,7 +55,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = ["HTTP://localhost:4200",]
+CORS_ALLOWED_ORIGINS = ["http://localhost:4200"]
 
 ROOT_URLCONF = 'backendgrocerylyzer.urls'
 
