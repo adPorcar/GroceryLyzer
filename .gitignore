@@ -1,0 +1,53 @@
+# === Python / Django ===
+# Entorno virtual
+venv/
+# bytecode
+__pycache__/
+*.py[cod]
+# base de datos SQLite
+db.sqlite3
+# logs
+*.log
+# archivos de entorno
+.env
+
+# === Node / Angular ===
+# salida de compilación
+dist/
+tmp/
+out-tsc/
+bazel-out/
+# dependencias
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# === IDEs y editores ===
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# === Visual Studio Code ===
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# === Miscellaneous ===
+.angular/cache/
+.sass-cache/
+connect.lock
+coverage/
+libpeerconnection.log
+testem.log
+typings/
+
+# === System files ===
+.DS_Store
+Thumbs.db
