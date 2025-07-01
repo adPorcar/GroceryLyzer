@@ -1,0 +1,11 @@
+# Requirements for OCR functionality
+easyocr==1.7.0
+pdf2image==1.16.3
+Pillow==10.0.0
+numpy==1.24.3
+pdfplumber==0.9.0
+
+# Existing Django requirements
+Django==5.1.1
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
