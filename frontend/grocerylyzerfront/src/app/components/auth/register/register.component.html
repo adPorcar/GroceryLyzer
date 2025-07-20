@@ -1,0 +1,98 @@
+<div class="register-container">
+  <div class="register-card">
+    <div class="register-header">
+      <h1 class="register-title">{{ 'register.title' | translate }}</h1>
+      <p class="register-subtitle">{{ 'register.subtitle' | translate }}</p>
+    </div>
+
+    <form class="register-form" (ngSubmit)="onSubmit()" #registerForm="ngForm">
+      <!-- Mostrar mensaje de error si existe -->
+      <div class="error-message" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'register.form.name' | translate }}</label>
+        <input 
+          type="text" 
+          class="form-input" 
+          [(ngModel)]="user.name"
+          name="name"
+          required
+          [disabled]="isLoading"
+          placeholder="{{ 'register.form.name.placeholder' | translate }}">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'register.form.email' | translate }}</label>
+        <input 
+          type="email" 
+          class="form-input" 
+          [(ngModel)]="user.email"
+          name="email"
+          required
+          [disabled]="isLoading"
+          placeholder="{{ 'register.form.email.placeholder' | translate }}">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'register.form.password' | translate }}</label>
+        <input 
+          type="password" 
+          class="form-input" 
+          [(ngModel)]="user.password"
+          name="password"
+          required
+          minlength="8"
+          [disabled]="isLoading"
+          placeholder="{{ 'register.form.password.placeholder' | translate }}">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'register.form.confirmPassword' | translate }}</label>
+        <input 
+          type="password" 
+          class="form-input" 
+          [(ngModel)]="user.confirmPassword"
+          name="confirmPassword"
+          required
+          [disabled]="isLoading"
+          placeholder="{{ 'register.form.confirmPassword.placeholder' | translate }}">
+      </div>
+
+      <button 
+        type="submit" 
+        [disabled]="!registerForm.form.valid || user.password !== user.confirmPassword || isLoading">
+        {{isLoading ? ('register.form.loading' | translate) : ('register.form.submit' | translate)}}
+      </button>
+    </form>
+
+    <div class="login-link">
+      <p>{{ 'register.hasAccount' | translate }} 
+        <a routerLink="/login" class="link">{{ 'register.loginLink' | translate }}</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de éxito -->
+<div class="success-modal-overlay" *ngIf="showSuccessModal" (click)="showSuccessModal = false">
+  <div class="success-modal" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="success-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" stroke="#22c55e" stroke-width="2" fill="none"/>
+          <path d="m9 12 2 2 4-4" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="modal-title">¡Registro Exitoso!</h2>
+      <p class="modal-message">Tu cuenta ha sido creada correctamente. Serás redirigido automáticamente.</p>
+      <div class="modal-loading">
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+        <p class="redirect-text">Redirigiendo en unos segundos...</p>
+      </div>
+    </div>
+  </div>
+</div>

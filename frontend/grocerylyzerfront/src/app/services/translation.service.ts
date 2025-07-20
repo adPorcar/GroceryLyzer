@@ -77,7 +77,23 @@ export class TranslationService {
       
       // Auth buttons
       'auth.login': 'Inicia sesión',
-      'auth.register': 'Regístrate'
+      'auth.register': 'Regístrate',
+      
+      // Register
+      'register.title': 'Crear Cuenta',
+      'register.subtitle': 'Únete a GroceryLyzer y comienza a gestionar tus gastos',
+      'register.form.name': 'Nombre Completo',
+      'register.form.name.placeholder': 'Tu nombre completo',
+      'register.form.email': 'Correo Electrónico',
+      'register.form.email.placeholder': 'tu@email.com',
+      'register.form.password': 'Contraseña',
+      'register.form.password.placeholder': 'Mínimo 8 caracteres',
+      'register.form.confirmPassword': 'Confirmar Contraseña',
+      'register.form.confirmPassword.placeholder': 'Repite tu contraseña',
+      'register.form.submit': 'Crear Cuenta',
+      'register.form.loading': 'Creando cuenta...',
+      'register.hasAccount': '¿Ya tienes cuenta?',
+      'register.loginLink': 'Inicia sesión aquí'
     },
     en: {
       // Navigation
@@ -141,7 +157,23 @@ export class TranslationService {
       
       // Auth buttons
       'auth.login': 'Sign In',
-      'auth.register': 'Sign Up'
+      'auth.register': 'Sign Up',
+      
+      // Register
+      'register.title': 'Create Account',
+      'register.subtitle': 'Join GroceryLyzer and start managing your expenses',
+      'register.form.name': 'Full Name',
+      'register.form.name.placeholder': 'Your full name',
+      'register.form.email': 'Email Address',
+      'register.form.email.placeholder': 'your@email.com',
+      'register.form.password': 'Password',
+      'register.form.password.placeholder': 'Minimum 8 characters',
+      'register.form.confirmPassword': 'Confirm Password',
+      'register.form.confirmPassword.placeholder': 'Repeat your password',
+      'register.form.submit': 'Create Account',
+      'register.form.loading': 'Creating account...',
+      'register.hasAccount': 'Already have an account?',
+      'register.loginLink': 'Sign in here'
     }
   };
 

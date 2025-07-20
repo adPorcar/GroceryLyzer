@@ -55,7 +55,11 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:4200"]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",  # Angular default
+    "http://localhost:5173",  # Vite default  
+    "http://127.0.0.1:5173"   # Alternative localhost
+]
 
 ROOT_URLCONF = 'backendgrocerylyzer.urls'
 
