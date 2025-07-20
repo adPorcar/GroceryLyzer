@@ -4,7 +4,7 @@ import {
   ROUTES,
   Router,
   loadChildren
-} from "./chunk-HB75GR5K.js";
+} from "./chunk-FMGA2FVD.js";
 import {
   APP_BASE_HREF,
   BrowserDomAdapter,
@@ -19,7 +19,7 @@ import {
   XhrFactory,
   getDOM,
   setRootDomAdapter
-} from "./chunk-3JCM32UY.js";
+} from "./chunk-MJPVWWUM.js";
 import {
   ALLOW_MULTIPLE_PLATFORMS,
   APP_ID,
@@ -54,7 +54,6 @@ import {
   makeEnvironmentProviders,
   platformCore,
   provideEnvironmentInitializer,
-  require_cjs,
   resetCompiledComponents,
   runInInjectionContext,
   setClassMetadata,
@@ -65,7 +64,10 @@ import {
   ɵɵdefineInjector,
   ɵɵdefineNgModule,
   ɵɵinject
-} from "./chunk-MUJGJP27.js";
+} from "./chunk-QRQSPDYV.js";
+import {
+  require_cjs
+} from "./chunk-DMO44UNM.js";
 import {
   __objRest,
   __spreadProps,
@@ -28126,4 +28128,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-UDKCIEMB.js.map
+//# sourceMappingURL=chunk-GW5JLSDB.js.map

@@ -90,6 +90,48 @@
     color: white;
   }
 
+  /* LANGUAGE SELECTOR */
+  .language-selector {
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+  }
+
+  .language-selector h4 {
+    margin: 0 0 10px 0;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    font-weight: 600;
+  }
+
+  .language-options {
+    display: flex;
+    gap: 8px;
+  }
+
+  .language-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+
+  .language-btn:hover {
+    background-color: var(--secondary-color);
+  }
+
+  .language-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+
   /* MAIN CONTENT */
   .main-content {
     flex: 1;
@@ -378,10 +420,29 @@
       <h2>GroceryLyzer</h2>
     </div>
     <div class="sidebar-nav">
-      <a href="#" class="nav-item active" (click)="closeSidebar()">🏠 Inicio</a>
-      <a href="#" class="nav-item" (click)="closeSidebar()">📄 Recibos</a>
-      <a href="#" class="nav-item" (click)="closeSidebar()">📊 Analíticas</a>
-      <a href="#" class="nav-item" (click)="closeSidebar()">👤 Perfil</a>
+      <a href="#" class="nav-item active" (click)="closeSidebar()">🏠 {{ 'nav.home' | translate }}</a>
+      <a href="#" class="nav-item" (click)="closeSidebar()">📄 {{ 'nav.receipts' | translate }}</a>
+      <a href="#" class="nav-item" (click)="closeSidebar()">📊 {{ 'nav.analytics' | translate }}</a>
+      <a href="#" class="nav-item" (click)="closeSidebar()">👤 {{ 'nav.profile' | translate }}</a>
+    </div>
+    
+    <!-- Language Selector -->
+    <div class="language-selector">
+      <h4>🌐 Idioma / Language</h4>
+      <div class="language-options">
+        <button 
+          class="language-btn" 
+          [class.active]="getCurrentLanguage() === 'es'"
+          (click)="changeLanguage('es')">
+          {{ 'language.spanish' | translate }}
+        </button>
+        <button 
+          class="language-btn" 
+          [class.active]="getCurrentLanguage() === 'en'"
+          (click)="changeLanguage('en')">
+          {{ 'language.english' | translate }}
+        </button>
+      </div>
     </div>
   </nav>
 
@@ -390,40 +451,37 @@
     <main class="content-area">
       <!-- WELCOME SECTION -->
       <div class="welcome-section">
-        <h1>¡Bienvenido a GroceryLyzer! 🛒</h1>
-        <p>Tu asistente inteligente para analizar gastos de supermercado</p>
+        <h1>{{ 'welcome.title' | translate }}</h1>
+        <p>{{ 'welcome.subtitle' | translate }}</p>
       </div>
 
       <!-- FEATURES SECTION -->
       <div class="features-container">
         <div class="feature-card">
           <span class="feature-icon scan">📄</span>
-          <h3 class="feature-title">Escanea Recibos</h3>
+          <h3 class="feature-title">{{ 'feature.scan.title' | translate }}</h3>
           <p class="feature-description">
-            Sube tus recibos en PDF y nuestra IA extraerá automáticamente todos los productos, 
-            precios y datos importantes usando tecnología OCR avanzada.
+            {{ 'feature.scan.description' | translate }}
           </p>
-          <a href="#" class="feature-btn">Subir Recibo</a>
+          <a href="#" class="feature-btn">{{ 'feature.scan.button' | translate }}</a>
         </div>
 
         <div class="feature-card">
           <span class="feature-icon analytics">📊</span>
-          <h3 class="feature-title">Analiza Gastos</h3>
+          <h3 class="feature-title">{{ 'feature.analytics.title' | translate }}</h3>
           <p class="feature-description">
-            Visualiza tendencias, compara precios entre supermercados, 
-            identifica productos más caros y descubre patrones en tus compras.
+            {{ 'feature.analytics.description' | translate }}
           </p>
-          <a href="#" class="feature-btn">Ver Analytics</a>
+          <a href="#" class="feature-btn">{{ 'feature.analytics.button' | translate }}</a>
         </div>
 
         <div class="feature-card">
           <span class="feature-icon savings">💰</span>
-          <h3 class="feature-title">Ahorra Dinero</h3>
+          <h3 class="feature-title">{{ 'feature.savings.title' | translate }}</h3>
           <p class="feature-description">
-            Encuentra la cesta más barata, recibe alertas de subidas de precios 
-            y optimiza tu presupuesto familiar con recomendaciones inteligentes.
+            {{ 'feature.savings.description' | translate }}
           </p>
-          <a href="#" class="feature-btn">Optimizar Gastos</a>
+          <a href="#" class="feature-btn">{{ 'feature.savings.button' | translate }}</a>
         </div>
       </div>
 
@@ -432,8 +490,8 @@
     
     <!-- FOOTER -->
     <footer class="footer">
-      <p>&copy; 2025 GroceryLyzer - Analiza tus gastos de supermercado<br>
-      Desarrollado por <a href="https://ad-porcar.vercel.app">ad-porcar</a></p>
+      <p>&copy; 2025 {{ 'footer.copyright' | translate }}<br>
+      {{ 'footer.developed' | translate }} <a href="https://ad-porcar.vercel.app">ad-porcar</a></p>
     </footer>
   </div>
 </div>
