@@ -11,7 +11,6 @@ class UserProfileInline(admin.StackedInline):
     fields = (
         'phone_number', 
         'birth_date', 
-        'preferred_supermarket',
         'email_notifications', 
         'price_alerts',
         'total_receipts_processed',
@@ -33,7 +32,6 @@ class UserProfileAdmin(admin.ModelAdmin):
     """Admin para gestionar los perfiles de usuario directamente"""
     list_display = (
         'user', 
-        'preferred_supermarket', 
         'email_notifications', 
         'price_alerts',
         'total_receipts_processed',
@@ -41,7 +39,6 @@ class UserProfileAdmin(admin.ModelAdmin):
         'created_at'
     )
     list_filter = (
-        'preferred_supermarket', 
         'email_notifications', 
         'price_alerts',
         'created_at'
@@ -57,7 +54,7 @@ class UserProfileAdmin(admin.ModelAdmin):
             'fields': ('phone_number', 'birth_date')
         }),
         ('Preferencias', {
-            'fields': ('preferred_supermarket', 'email_notifications', 'price_alerts')
+            'fields': ('email_notifications', 'price_alerts')
         }),
         ('Estadísticas', {
             'fields': ('total_receipts_processed', 'total_amount_spent'),

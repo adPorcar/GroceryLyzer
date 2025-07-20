@@ -157,7 +157,6 @@ def user_profile(request):
             'profile': {
                 'phone_number': profile.phone_number,
                 'birth_date': profile.birth_date.strftime('%Y-%m-%d') if profile.birth_date else None,
-                'preferred_supermarket': profile.preferred_supermarket,
                 'email_notifications': profile.email_notifications,
                 'price_alerts': profile.price_alerts,
                 'created_at': profile.created_at.strftime('%Y-%m-%d %H:%M:%S'),
@@ -215,12 +214,6 @@ def update_profile(request):
                     profile.birth_date = None
             except ValueError:
                 return JsonResponse({'error': 'Formato de fecha inválido. Use YYYY-MM-DD'}, status=400)
-        if 'preferred_supermarket' in data:
-            valid_supermarkets = ['dia', 'mercadona', 'carrefour', 'lidl', 'aldi', 'otros']
-            if data['preferred_supermarket'] in valid_supermarkets or data['preferred_supermarket'] is None:
-                profile.preferred_supermarket = data['preferred_supermarket']
-            else:
-                return JsonResponse({'error': 'Supermercado no válido'}, status=400)
         if 'email_notifications' in data:
             profile.email_notifications = bool(data['email_notifications'])
         if 'price_alerts' in data:
@@ -243,7 +236,6 @@ def update_profile(request):
             'profile': {
                 'phone_number': profile.phone_number,
                 'birth_date': profile.birth_date.strftime('%Y-%m-%d') if profile.birth_date else None,
-                'preferred_supermarket': profile.preferred_supermarket,
                 'email_notifications': profile.email_notifications,
                 'price_alerts': profile.price_alerts
             }

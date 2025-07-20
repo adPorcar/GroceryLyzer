@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject } from 'rxjs';
 
 export interface Translation {
@@ -11,6 +12,7 @@ export interface Translation {
 export class TranslationService {
   private currentLanguage = new BehaviorSubject<string>('es');
   public currentLanguage$ = this.currentLanguage.asObservable();
+  private isBrowser: boolean;
 
   private translations: { [lang: string]: Translation } = {
     es: {
@@ -37,13 +39,45 @@ export class TranslationService {
       'feature.savings.description': 'Encuentra la cesta más barata, recibe alertas de subidas de precios y optimiza tu presupuesto familiar con recomendaciones inteligentes.',
       'feature.savings.button': 'Optimizar Gastos',
       
+      // Receipts
+      'receipts.description': 'Sube y gestiona todos tus recibos de compras',
+      'receipts.upload.title': 'Arrastra y suelta tu recibo aquí',
+      'receipts.upload.subtitle': 'O haz clic para seleccionar archivos (PDF, JPG, PNG)',
+      'receipts.list.title': 'Mis Recibos',
+      'receipts.list.empty': 'No tienes recibos todavía. ¡Sube tu primer recibo!',
+      
+      // Analytics
+      'analytics.description': 'Analiza tus patrones de gasto y encuentra oportunidades de ahorro',
+      'analytics.total.spent': 'Total Gastado',
+      'analytics.total.receipts': 'Total Recibos',
+      'analytics.total.items': 'Total Productos',
+      'analytics.average.monthly': 'Promedio Mensual',
+      'analytics.charts.title': 'Gráficos y Tendencias',
+      'analytics.charts.nodata': 'No hay datos suficientes para mostrar gráficos. ¡Sube algunos recibos primero!',
+      
+      // Profile
+      'profile.welcome': 'Bienvenido a tu perfil',
+      'profile.form.name': 'Nombre Completo',
+      'profile.form.name.placeholder': 'Tu nombre completo',
+      'profile.form.email': 'Correo Electrónico',
+      'profile.form.email.placeholder': 'tu@email.com',
+      'profile.form.phone': 'Teléfono',
+      'profile.form.phone.placeholder': 'Tu número de teléfono',
+      'profile.form.budget': 'Presupuesto Mensual',
+      'profile.form.budget.placeholder': 'Presupuesto en €',
+      'profile.form.save': 'Guardar Cambios',
+      
       // Footer
       'footer.copyright': 'GroceryLyzer - Analiza tus gastos de supermercado',
       'footer.developed': 'Desarrollado por',
       
       // Language
       'language.spanish': 'Español',
-      'language.english': 'English'
+      'language.english': 'English',
+      
+      // Auth buttons
+      'auth.login': 'Inicia sesión',
+      'auth.register': 'Regístrate'
     },
     en: {
       // Navigation
@@ -69,13 +103,45 @@ export class TranslationService {
       'feature.savings.description': 'Find the cheapest basket, receive price increase alerts and optimize your family budget with smart recommendations.',
       'feature.savings.button': 'Optimize Expenses',
       
+      // Receipts
+      'receipts.description': 'Upload and manage all your shopping receipts',
+      'receipts.upload.title': 'Drag and drop your receipt here',
+      'receipts.upload.subtitle': 'Or click to select files (PDF, JPG, PNG)',
+      'receipts.list.title': 'My Receipts',
+      'receipts.list.empty': 'You don\'t have any receipts yet. Upload your first receipt!',
+      
+      // Analytics
+      'analytics.description': 'Analyze your spending patterns and find saving opportunities',
+      'analytics.total.spent': 'Total Spent',
+      'analytics.total.receipts': 'Total Receipts',
+      'analytics.total.items': 'Total Items',
+      'analytics.average.monthly': 'Monthly Average',
+      'analytics.charts.title': 'Charts and Trends',
+      'analytics.charts.nodata': 'Not enough data to show charts. Upload some receipts first!',
+      
+      // Profile
+      'profile.welcome': 'Welcome to your profile',
+      'profile.form.name': 'Full Name',
+      'profile.form.name.placeholder': 'Your full name',
+      'profile.form.email': 'Email Address',
+      'profile.form.email.placeholder': 'your@email.com',
+      'profile.form.phone': 'Phone Number',
+      'profile.form.phone.placeholder': 'Your phone number',
+      'profile.form.budget': 'Monthly Budget',
+      'profile.form.budget.placeholder': 'Budget in €',
+      'profile.form.save': 'Save Changes',
+      
       // Footer
       'footer.copyright': 'GroceryLyzer - Analyze your grocery expenses',
       'footer.developed': 'Developed by',
       
       // Language
       'language.spanish': 'Español',
-      'language.english': 'English'
+      'language.english': 'English',
+      
+      // Auth buttons
+      'auth.login': 'Sign In',
+      'auth.register': 'Sign Up'
     }
   };
 
@@ -85,7 +151,9 @@ export class TranslationService {
 
   setLanguage(lang: string): void {
     this.currentLanguage.next(lang);
-    localStorage.setItem('preferred-language', lang);
+    if (this.isBrowser) {
+      localStorage.setItem('preferred-language', lang);
+    }
   }
 
   translate(key: string): string {
@@ -93,11 +161,15 @@ export class TranslationService {
     return this.translations[currentLang]?.[key] || key;
   }
 
-  constructor() {
-    // Load saved language preference
-    const savedLang = localStorage.getItem('preferred-language');
-    if (savedLang && this.translations[savedLang]) {
-      this.currentLanguage.next(savedLang);
+  constructor(@Inject(PLATFORM_ID) platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
+    
+    // Load saved language preference only if in browser
+    if (this.isBrowser) {
+      const savedLang = localStorage.getItem('preferred-language');
+      if (savedLang && this.translations[savedLang]) {
+        this.currentLanguage.next(savedLang);
+      }
     }
   }
 }
