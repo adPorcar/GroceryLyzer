@@ -12,6 +12,18 @@
       </div>
 
       <div class="form-group">
+        <label class="form-label">{{ 'register.form.username' | translate }}</label>
+        <input 
+          type="text" 
+          class="form-input" 
+          [(ngModel)]="user.username"
+          name="username"
+          required
+          [disabled]="isLoading"
+          placeholder="{{ 'register.form.username.placeholder' | translate }}">
+      </div>
+
+      <div class="form-group">
         <label class="form-label">{{ 'register.form.name' | translate }}</label>
         <input 
           type="text" 

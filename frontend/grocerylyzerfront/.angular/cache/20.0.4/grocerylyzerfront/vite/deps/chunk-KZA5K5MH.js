@@ -1,4 +1,6 @@
-import { createRequire } from 'module';const require = createRequire(import.meta.url);
+import {
+  withHttpTransferCache
+} from "./chunk-S44QF2RR.js";
 import {
   CommonModule,
   DomAdapter,
@@ -6,14 +8,11 @@ import {
   getDOM,
   isPlatformServer,
   setRootDomAdapter
-} from "./chunk-QGGPAWLV.js";
-import {
-  withHttpTransferCache
-} from "./chunk-IYHYDWRG.js";
+} from "./chunk-7YEHUKYO.js";
 import {
   XhrFactory,
   parseCookieValue
-} from "./chunk-4YZHNSA6.js";
+} from "./chunk-OPGNYZHR.js";
 import {
   APP_ID,
   ApplicationModule,
@@ -73,11 +72,10 @@ import {
   ɵɵdefineInjector,
   ɵɵdefineNgModule,
   ɵɵinject
-} from "./chunk-QRQSPDYV.js";
+} from "./chunk-RCOFFXPT.js";
 import {
-  __spreadProps,
   __spreadValues
-} from "./chunk-6DU2HRTW.js";
+} from "./chunk-NT3G5BIU.js";
 
 // node_modules/@angular/platform-browser/fesm2022/dom_renderer.mjs
 var EVENT_MANAGER_PLUGINS = new InjectionToken(ngDevMode ? "EventManagerPlugins" : "");
@@ -418,14 +416,14 @@ var DomRendererFactory2 = class _DomRendererFactory2 {
     this.ngZone = ngZone;
     this.nonce = nonce;
     this.tracingService = tracingService;
-    this.platformIsServer = true;
+    this.platformIsServer = false;
     this.defaultRenderer = new DefaultDomRenderer2(eventManager, doc, ngZone, this.platformIsServer, this.tracingService);
   }
   createRenderer(element, type) {
     if (!element || !type) {
       return this.defaultRenderer;
     }
-    if (type.encapsulation === ViewEncapsulation.ShadowDom) {
+    if (false) {
       type = __spreadProps(__spreadValues({}, type), {
         encapsulation: ViewEncapsulation.Emulated
       });
@@ -667,7 +665,7 @@ var DefaultDomRenderer2 = class {
       if (event === "__ngUnwrap__") {
         return eventHandler;
       }
-      const allowDefaultBehavior = true ? this.ngZone.runGuarded(() => eventHandler(event)) : eventHandler(event);
+      const allowDefaultBehavior = false ? this.ngZone.runGuarded(() => eventHandler(event)) : eventHandler(event);
       if (allowDefaultBehavior === false) {
         event.preventDefault();
       }
@@ -2016,4 +2014,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-E4BERCAN.js.map
+//# sourceMappingURL=chunk-KZA5K5MH.js.map

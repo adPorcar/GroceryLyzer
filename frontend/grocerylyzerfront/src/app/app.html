@@ -90,6 +90,35 @@
     color: white;
   }
 
+  /* USER SECTION */
+  .user-section {
+    border-top: 1px solid var(--border-color);
+    margin-top: 10px;
+    padding-top: 15px;
+  }
+
+  .user-info {
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    color: var(--text-color);
+    font-weight: 500;
+  }
+
+  .user-welcome {
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .logout-btn {
+    color: #dc2626 !important;
+    font-weight: 500;
+  }
+
+  .logout-btn:hover {
+    background-color: #fef2f2 !important;
+    color: #dc2626 !important;
+  }
+
   /* LANGUAGE SELECTOR */
   .language-selector {
     padding: 20px;
@@ -242,6 +271,13 @@
       <a routerLink="/receipts" class="nav-item" routerLinkActive="active" (click)="closeSidebar()">📄 {{ 'nav.receipts' | translate }}</a>
       <a routerLink="/analytics" class="nav-item" routerLinkActive="active" (click)="closeSidebar()">📊 {{ 'nav.analytics' | translate }}</a>
       <a routerLink="/profile" class="nav-item" routerLinkActive="active" (click)="closeSidebar()">👤 {{ 'nav.profile' | translate }}</a>
+      
+      <!-- User section -->
+      <div class="user-section" *ngIf="authService.isLoggedIn()">
+        <button class="nav-item logout-btn" (click)="onLogout()" (dblclick)="onForceLogout()">
+          🚪 {{ 'nav.logout' | translate }}
+        </button>
+      </div>
     </div>
     
     <!-- Language Selector -->

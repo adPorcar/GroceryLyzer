@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
@@ -6,12 +7,13 @@ import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-register',
-  imports: [FormsModule, RouterLink, TranslatePipe],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
 })
 export class RegisterComponent {
   user = {
+    username: '',
     name: '',
     email: '',
     password: '',
@@ -40,7 +42,7 @@ export class RegisterComponent {
 
     // Preparar datos para el backend
     const registerData = {
-      username: this.user.email, // Usamos email como username
+      username: this.user.username,
       email: this.user.email,
       password1: this.user.password,
       password2: this.user.confirmPassword,
@@ -52,11 +54,10 @@ export class RegisterComponent {
         console.log('Registro exitoso:', response);
         this.isLoading = false;
         this.showSuccessModal = true;
-        // Redirigir al home después de mostrar el modal
         setTimeout(() => {
           this.showSuccessModal = false;
           this.router.navigate(['/home']);
-        }, 3000);
+        }, 1000);
       },
       error: (error) => {
         console.error('Error en registro:', error);

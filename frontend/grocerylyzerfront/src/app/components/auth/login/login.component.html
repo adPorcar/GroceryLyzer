@@ -1,0 +1,82 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1 class="login-title">{{ 'login.title' | translate }}</h1>
+      <p class="login-subtitle">{{ 'login.subtitle' | translate }}</p>
+    </div>
+
+    <form class="login-form" (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <!-- Mostrar mensaje de error si existe -->
+      <div class="error-message" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'login.form.username' | translate }}</label>
+        <input 
+          type="text" 
+          class="form-input" 
+          [(ngModel)]="user.username"
+          name="username"
+          required
+          [disabled]="isLoading"
+          placeholder="{{ 'login.form.username.placeholder' | translate }}">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'login.form.password' | translate }}</label>
+        <input 
+          type="password" 
+          class="form-input" 
+          [(ngModel)]="user.password"
+          name="password"
+          required
+          [disabled]="isLoading"
+          placeholder="{{ 'login.form.password.placeholder' | translate }}">
+      </div>
+
+      <div class="form-options">
+        <label class="checkbox-container">
+          <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe">
+          <span class="checkmark"></span>
+          {{ 'login.form.rememberMe' | translate }}
+        </label>
+        <a href="#" class="forgot-password">{{ 'login.form.forgotPassword' | translate }}</a>
+      </div>
+
+      <button 
+        type="submit" 
+        [disabled]="!loginForm.form.valid || isLoading">
+        {{isLoading ? ('login.form.loading' | translate) : ('login.form.submit' | translate)}}
+      </button>
+    </form>
+
+    <div class="register-link">
+      <p>{{ 'login.noAccount' | translate }} 
+        <a routerLink="/register" class="link">{{ 'login.registerLink' | translate }}</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de éxito -->
+<div class="success-modal-overlay" *ngIf="showSuccessModal" (click)="showSuccessModal = false">
+  <div class="success-modal" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="success-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" stroke="#22c55e" stroke-width="2" fill="none"/>
+          <path d="m9 12 2 2 4-4" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="modal-title">{{ 'login.success.title' | translate }}</h2>
+      <p class="modal-message">{{ 'login.success.message' | translate }}</p>
+      <div class="modal-loading">
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+        <p class="redirect-text">{{ 'login.success.redirecting' | translate }}</p>
+      </div>
+    </div>
+  </div>
+</div>

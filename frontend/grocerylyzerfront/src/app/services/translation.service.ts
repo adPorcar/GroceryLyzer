@@ -21,6 +21,11 @@ export class TranslationService {
       'nav.receipts': 'Recibos',
       'nav.analytics': 'Analíticas',
       'nav.profile': 'Perfil',
+      'nav.logout': 'Cerrar Sesión',
+      
+      // User session
+      'user.welcome': 'Bienvenido,',
+      'user.notLoggedIn': 'No has iniciado sesión',
       
       // Welcome Section
       'welcome.title': '¡Bienvenido a GroceryLyzer! 🛒',
@@ -81,7 +86,9 @@ export class TranslationService {
       
       // Register
       'register.title': 'Crear Cuenta',
-      'register.subtitle': 'Únete a GroceryLyzer y comienza a gestionar tus gastos',
+      'register.subtitle': 'Únete comienza a gestionar tus gastos',
+      'register.form.username': 'Nombre de Usuario',
+      'register.form.username.placeholder': 'Tu nombre de usuario',
       'register.form.name': 'Nombre Completo',
       'register.form.name.placeholder': 'Tu nombre completo',
       'register.form.email': 'Correo Electrónico',
@@ -93,7 +100,28 @@ export class TranslationService {
       'register.form.submit': 'Crear Cuenta',
       'register.form.loading': 'Creando cuenta...',
       'register.hasAccount': '¿Ya tienes cuenta?',
-      'register.loginLink': 'Inicia sesión aquí'
+      'register.loginLink': 'Inicia sesión aquí',
+      
+      // Login
+      'login.title': 'Iniciar Sesión',
+      'login.subtitle': 'Accede a tu cuenta',
+      'login.form.username': 'Nombre de Usuario',
+      'login.form.username.placeholder': 'Tu nombre de usuario',
+      'login.form.email': 'Correo Electrónico',
+      'login.form.email.placeholder': 'tu@email.com',
+      'login.form.password': 'Contraseña',
+      'login.form.password.placeholder': 'Tu contraseña',
+      'login.form.rememberMe': 'Recordarme',
+      'login.form.forgotPassword': '¿Olvidaste tu contraseña?',
+      'login.form.submit': 'Iniciar Sesión',
+      'login.form.loading': 'Iniciando sesión...',
+      'login.noAccount': '¿No tienes cuenta?',
+      'login.registerLink': 'Regístrate aquí',
+      
+      // Login success modal
+      'login.success.title': '¡Bienvenido!',
+      'login.success.message': 'Has iniciado sesión correctamente. Serás redirigido automáticamente.',
+      'login.success.redirecting': 'Redirigiendo en unos segundos...',
     },
     en: {
       // Navigation
@@ -101,6 +129,11 @@ export class TranslationService {
       'nav.receipts': 'Receipts',
       'nav.analytics': 'Analytics',
       'nav.profile': 'Profile',
+      'nav.logout': 'Sign Out',
+      
+      // User session
+      'user.welcome': 'Welcome,',
+      'user.notLoggedIn': 'Not logged in',
       
       // Welcome Section
       'welcome.title': 'Welcome to GroceryLyzer! 🛒',
@@ -161,7 +194,9 @@ export class TranslationService {
       
       // Register
       'register.title': 'Create Account',
-      'register.subtitle': 'Join GroceryLyzer and start managing your expenses',
+      'register.subtitle': 'Join and start managing your expenses',
+      'register.form.username': 'Username',
+      'register.form.username.placeholder': 'Your username',
       'register.form.name': 'Full Name',
       'register.form.name.placeholder': 'Your full name',
       'register.form.email': 'Email Address',
@@ -173,7 +208,28 @@ export class TranslationService {
       'register.form.submit': 'Create Account',
       'register.form.loading': 'Creating account...',
       'register.hasAccount': 'Already have an account?',
-      'register.loginLink': 'Sign in here'
+      'register.loginLink': 'Sign in here',
+      
+      // Login
+      'login.title': 'Sign In',
+      'login.subtitle': 'Access your account',
+      'login.form.username': 'Username',
+      'login.form.username.placeholder': 'Enter your username',
+      'login.form.email': 'Email Address',
+      'login.form.email.placeholder': 'your@email.com',
+      'login.form.password': 'Password',
+      'login.form.password.placeholder': 'Your password',
+      'login.form.rememberMe': 'Remember me',
+      'login.form.forgotPassword': 'Forgot your password?',
+      'login.form.submit': 'Sign In',
+      'login.form.loading': 'Signing in...',
+      'login.noAccount': "Don't have an account?",
+      'login.registerLink': 'Sign up here',
+      
+      // Login success modal
+      'login.success.title': 'Welcome!',
+      'login.success.message': 'You have successfully logged in. You will be redirected automatically.',
+      'login.success.redirecting': 'Redirecting in a few seconds...',
     }
   };
 
