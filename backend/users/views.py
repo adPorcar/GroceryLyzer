@@ -120,6 +120,7 @@ def user_logout(request):
     except Exception as e:
         return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
 
+@csrf_exempt
 @require_http_methods(["GET"])
 def user_profile(request):
     """API endpoint para obtener perfil del usuario autenticado"""

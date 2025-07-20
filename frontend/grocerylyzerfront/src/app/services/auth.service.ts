@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { tap, timeout, catchError } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
@@ -20,7 +20,42 @@ export interface AuthResponse {
     username: string;
     email: string;
     first_name: string;
+    last_name?: string;
   };
+}
+
+export interface ProfileResponse {
+  success: boolean;
+  message: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+  };
+  profile: {
+    phone_number: string;
+    birth_date: string | null;
+    email_notifications: boolean;
+    price_alerts: boolean;
+  };
+}
+
+export interface UpdateProfileRequest {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone_number?: string;
+  birth_date?: string;
+  email_notifications?: boolean;
+  price_alerts?: boolean;
+}
+
+export interface ChangePasswordRequest {
+  old_password: string;
+  new_password: string;
+  confirm_password: string;
 }
 
 @Injectable({
@@ -45,15 +80,25 @@ export class AuthService {
     }
   }
 
+  // Método para obtener headers con credenciales
+  private getHttpOptions() {
+    return {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+      }),
+      withCredentials: true // Importante para enviar cookies de sesión
+    };
+  }
+
   register(userData: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/register/`, userData);
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register/`, userData, this.getHttpOptions());
   }
 
   login(username: string, password: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login/`, { 
       username: username,
       password 
-    }).pipe(
+    }, this.getHttpOptions()).pipe(
       tap(response => {
         if (response.user && isPlatformBrowser(this.platformId)) {
           // Guardar usuario en localStorage y actualizar el subject
@@ -67,7 +112,7 @@ export class AuthService {
   logout(): Observable<AuthResponse> {
     console.log('AuthService: logout called');
     
-    return this.http.post<AuthResponse>(`${this.apiUrl}/logout/`, {}).pipe(
+    return this.http.post<AuthResponse>(`${this.apiUrl}/logout/`, {}, this.getHttpOptions()).pipe(
       timeout(5000), // 5 segundos timeout
       tap({
         next: (response) => {
@@ -99,5 +144,40 @@ export class AuthService {
 
   isLoggedIn(): boolean {
     return this.currentUserSubject.value !== null;
+  }
+
+  // Métodos de perfil
+  getProfile(): Observable<ProfileResponse> {
+    console.log('AuthService: getProfile called');
+    const options = this.getHttpOptions();
+    console.log('AuthService: HTTP options', options);
+    return this.http.get<ProfileResponse>(`${this.apiUrl}/profile/`, options).pipe(
+      tap({
+        next: (response) => console.log('AuthService: getProfile success', response),
+        error: (error) => console.error('AuthService: getProfile error', error)
+      })
+    );
+  }
+
+  updateProfile(profileData: UpdateProfileRequest): Observable<ProfileResponse> {
+    return this.http.put<ProfileResponse>(`${this.apiUrl}/profile/update/`, profileData, this.getHttpOptions()).pipe(
+      tap(response => {
+        if (response.success && response.user) {
+          // Actualizar la información del usuario en el estado local
+          const currentUser = this.getCurrentUser();
+          if (currentUser) {
+            const updatedUser = { ...currentUser, ...response.user };
+            if (isPlatformBrowser(this.platformId)) {
+              localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+            }
+            this.currentUserSubject.next(updatedUser);
+          }
+        }
+      })
+    );
+  }
+
+  changePassword(passwordData: ChangePasswordRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/profile/change-password/`, passwordData, this.getHttpOptions());
   }
 }

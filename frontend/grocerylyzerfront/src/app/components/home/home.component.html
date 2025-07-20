@@ -43,3 +43,30 @@
     {{ 'auth.register' | translate }}
   </a>
 </div>
+
+<!-- Modal de Autenticación Requerida -->
+<div class="auth-required-modal-overlay" *ngIf="showLoginRequiredModal" (click)="closeModal()">
+  <div class="auth-required-modal" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="auth-required-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" stroke="#f59e0b" stroke-width="2" fill="none"/>
+          <path d="M12 8v4m0 4h.01" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="modal-title">{{ 'auth.required.title' | translate }}</h2>
+      <p class="modal-message">{{ 'auth.required.message' | translate }}</p>
+      <div class="modal-actions">
+        <button class="btn-primary" (click)="goToLogin()">
+          {{ 'auth.required.loginButton' | translate }}
+        </button>
+        <button class="btn-secondary" (click)="goToRegister()">
+          {{ 'auth.required.registerButton' | translate }}
+        </button>
+      </div>
+      <button class="btn-close" (click)="closeModal()">
+        {{ 'auth.required.close' | translate }}
+      </button>
+    </div>
+  </div>
+</div>
