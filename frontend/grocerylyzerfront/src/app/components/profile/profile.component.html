@@ -1,0 +1,187 @@
+<div class="profile-container">
+  <div class="page-header">
+    <h1 class="page-title">{{ 'profile.title' | translate }}</h1>
+    <p class="page-subtitle">{{ 'profile.subtitle' | translate }}</p>
+  </div>
+
+  <!-- Loading spinner -->
+  <div class="loading-spinner" *ngIf="isLoadingProfile">
+    <div class="spinner"></div>
+    <p>{{ 'profile.loading' | translate }}</p>
+  </div>
+
+  <!-- Profile Form -->
+  <div class="profile-content" *ngIf="!isLoadingProfile">
+    <div class="profile-card">
+      <div class="card-header">
+        <h2 class="card-title">{{ 'profile.personal.title' | translate }}</h2>
+        <p class="card-subtitle">{{ 'profile.personal.subtitle' | translate }}</p>
+      </div>
+
+      <form class="profile-form" (ngSubmit)="onUpdateProfile()" #profileForm="ngForm">
+        <!-- Mensajes de error/éxito -->
+        <div class="message error-message" *ngIf="profileError">
+          {{ profileError }}
+        </div>
+        <div class="message success-message" *ngIf="profileMessage">
+          {{ profileMessage }}
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">{{ 'profile.form.firstName' | translate }}</label>
+            <input 
+              type="text" 
+              class="form-input" 
+              [(ngModel)]="profileData.first_name"
+              name="first_name"
+              [disabled]="isLoadingProfile"
+              placeholder="{{ 'profile.form.firstName.placeholder' | translate }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ 'profile.form.lastName' | translate }}</label>
+            <input 
+              type="text" 
+              class="form-input" 
+              [(ngModel)]="profileData.last_name"
+              name="last_name"
+              [disabled]="isLoadingProfile"
+              placeholder="{{ 'profile.form.lastName.placeholder' | translate }}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ 'profile.form.email' | translate }}</label>
+          <input 
+            type="email" 
+            class="form-input" 
+            [(ngModel)]="profileData.email"
+            name="email"
+            required
+            [disabled]="isLoadingProfile"
+            placeholder="{{ 'profile.form.email.placeholder' | translate }}">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">{{ 'profile.form.phone' | translate }}</label>
+            <input 
+              type="tel" 
+              class="form-input" 
+              [(ngModel)]="profileData.phone_number"
+              name="phone_number"
+              [disabled]="isLoadingProfile"
+              placeholder="{{ 'profile.form.phone.placeholder' | translate }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ 'profile.form.birthDate' | translate }}</label>
+            <input 
+              type="date" 
+              class="form-input" 
+              [(ngModel)]="profileData.birth_date"
+              name="birth_date"
+              [disabled]="isLoadingProfile">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button 
+            type="submit" 
+            class="btn-primary"
+            [disabled]="!profileForm.form.valid || isLoadingProfile">
+            {{ isLoadingProfile ? ('profile.form.updating' | translate) : ('profile.form.updateProfile' | translate) }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Password Change Section -->
+    <div class="profile-card">
+      <div class="card-header">
+        <h2 class="card-title">{{ 'profile.security.title' | translate }}</h2>
+        <p class="card-subtitle">{{ 'profile.security.subtitle' | translate }}</p>
+      </div>
+
+      <div class="security-actions">
+        <button 
+          type="button" 
+          class="btn-secondary"
+          (click)="togglePasswordForm()">
+          {{ showPasswordForm ? ('profile.security.cancel' | translate) : ('profile.security.changePassword' | translate) }}
+        </button>
+      </div>
+
+      <!-- Password Change Form -->
+      <form class="password-form" *ngIf="showPasswordForm" (ngSubmit)="onChangePassword()" #passwordForm="ngForm">
+        <!-- Mensajes de error/éxito -->
+        <div class="message error-message" *ngIf="passwordError">
+          {{ passwordError }}
+        </div>
+        <div class="message success-message" *ngIf="passwordMessage">
+          {{ passwordMessage }}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ 'profile.password.current' | translate }}</label>
+          <input 
+            type="password" 
+            class="form-input" 
+            [(ngModel)]="passwordData.old_password"
+            name="old_password"
+            required
+            [disabled]="isLoadingPassword"
+            placeholder="{{ 'profile.password.current.placeholder' | translate }}">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ 'profile.password.new' | translate }}</label>
+          <input 
+            type="password" 
+            class="form-input" 
+            [(ngModel)]="passwordData.new_password"
+            name="new_password"
+            required
+            minlength="8"
+            [disabled]="isLoadingPassword"
+            placeholder="{{ 'profile.password.new.placeholder' | translate }}">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ 'profile.password.confirm' | translate }}</label>
+          <input 
+            type="password" 
+            class="form-input" 
+            [(ngModel)]="passwordData.confirm_password"
+            name="confirm_password"
+            required
+            [disabled]="isLoadingPassword"
+            placeholder="{{ 'profile.password.confirm.placeholder' | translate }}">
+        </div>
+
+        <div class="form-actions">
+          <button 
+            type="submit" 
+            class="btn-primary"
+            [disabled]="!passwordForm.form.valid || isLoadingPassword">
+            {{ isLoadingPassword ? ('profile.password.updating' | translate) : ('profile.password.change' | translate) }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de éxito -->
+<div class="success-modal-overlay" *ngIf="showSuccessModal" (click)="showSuccessModal = false">
+  <div class="success-modal" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="success-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" stroke="#22c55e" stroke-width="2" fill="none"/>
+          <path d="m9 12 2 2 4-4" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="modal-title">{{ 'profile.success.title' | translate }}</h2>
+      <p class="modal-message">{{ 'profile.success.message' | translate }}</p>
+    </div>
+  </div>
+</div>

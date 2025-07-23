@@ -1,0 +1,77 @@
+.receipts-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #075a07ff;
+  margin-bottom: 10px;
+}
+
+.page-description {
+  font-size: 1.1rem;
+  color: #64748b;
+  margin-bottom: 30px;
+}
+
+.upload-area {
+  border: 2px dashed #31c86bff;
+  border-radius: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  background-color: rgba(49, 200, 107, 0.05);
+  margin-bottom: 40px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.upload-area:hover {
+  border-color: #259251;
+  background-color: rgba(49, 200, 107, 0.1);
+}
+
+.upload-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  color: #31c86bff;
+}
+
+.upload-text {
+  font-size: 1.2rem;
+  color: #075a07ff;
+  margin-bottom: 10px;
+}
+
+.upload-subtext {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.receipts-list {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.list-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #075a07ff;
+  margin-bottom: 20px;
+}
+
+.no-receipts {
+  text-align: center;
+  color: #64748b;
+  font-style: italic;
+  padding: 40px 20px;
+}
