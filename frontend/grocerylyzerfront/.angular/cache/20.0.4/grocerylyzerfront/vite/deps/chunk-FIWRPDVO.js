@@ -1,15 +1,12 @@
-import { createRequire } from 'module';const require = createRequire(import.meta.url);
 import {
-  require_operators
-} from "./chunk-XIUPE5QE.js";
-import {
-  require_cjs
-} from "./chunk-H4ZMFFWR.js";
-import {
+  BehaviorSubject,
+  Observable,
+  Subject,
+  Subscription,
   __spreadProps,
   __spreadValues,
-  __toESM
-} from "./chunk-6DU2HRTW.js";
+  map
+} from "./chunk-ZG272CAW.js";
 
 // node_modules/@angular/core/fesm2022/primitives/di.mjs
 var _currentInjector = void 0;
@@ -324,9 +321,9 @@ function createSignal(initialValue, equal) {
     getter.toString = () => `[Signal${debugName}: ${node.value}]`;
   }
   runPostProducerCreatedFn(node);
-  const set = (newValue) => signalSetFn(node, newValue);
+  const set2 = (newValue) => signalSetFn(node, newValue);
   const update = (updateFn) => signalUpdateFn(node, updateFn);
-  return [getter, set, update];
+  return [getter, set2, update];
 }
 function signalGetFn(node) {
   producerAccessed(node);
@@ -360,9 +357,6 @@ function signalValueChanged(node) {
   producerNotifyConsumers(node);
   postSignalSetFn?.(node);
 }
-
-// node_modules/@angular/core/fesm2022/root_effect_scheduler.mjs
-var import_rxjs = __toESM(require_cjs(), 1);
 
 // node_modules/@angular/core/fesm2022/untracked.mjs
 function createLinkedSignal(sourceFn, computationFn, equalityFn) {
@@ -2583,7 +2577,7 @@ var errorHandlerEnvironmentInitializer = {
 var globalErrorListeners = new InjectionToken(ngDevMode ? "GlobalErrorListeners" : "", {
   providedIn: "root",
   factory: () => {
-    if (true) {
+    if (false) {
       return;
     }
     const window2 = inject(DOCUMENT).defaultView;
@@ -2630,10 +2624,10 @@ function ɵunwrapWritableSignal(value) {
   return null;
 }
 function signal(initialValue, options) {
-  const [get, set, update] = createSignal(initialValue, options?.equal);
-  const signalFn = get;
+  const [get2, set2, update] = createSignal(initialValue, options?.equal);
+  const signalFn = get2;
   const node = signalFn[SIGNAL];
-  signalFn.set = set;
+  signalFn.set = set2;
   signalFn.update = update;
   signalFn.asReadonly = signalAsReadonlyFn.bind(signalFn);
   if (ngDevMode) {
@@ -2685,7 +2679,7 @@ var PendingTasksInternal = class _PendingTasksInternal {
   taskId = 0;
   pendingTasks = /* @__PURE__ */ new Set();
   destroyed = false;
-  pendingTask = new import_rxjs.BehaviorSubject(false);
+  pendingTask = new BehaviorSubject(false);
   get hasPendingTasks() {
     return this.destroyed ? false : this.pendingTask.value;
   }
@@ -2695,7 +2689,7 @@ var PendingTasksInternal = class _PendingTasksInternal {
    */
   get hasPendingTasksObservable() {
     if (this.destroyed) {
-      return new import_rxjs.Observable((subscriber) => {
+      return new Observable((subscriber) => {
         subscriber.next(false);
         subscriber.complete();
       });
@@ -2867,10 +2861,6 @@ var ZoneAwareEffectScheduler = class {
     return ranOneEffect;
   }
 };
-
-// node_modules/@angular/core/fesm2022/debug_node.mjs
-var import_rxjs2 = __toESM(require_cjs(), 1);
-var import_operators = __toESM(require_operators(), 1);
 
 // node_modules/@angular/core/fesm2022/attribute.mjs
 var Attribute = {
@@ -4335,7 +4325,7 @@ var QueryList = class {
    * Returns `Observable` of `QueryList` notifying the subscriber of changes.
    */
   get changes() {
-    return this._changes ??= new import_rxjs2.Subject();
+    return this._changes ??= new Subject();
   }
   /**
    * @param emitDistinctChangesOnly Whether `QueryList.changes` should fire only when actual change
@@ -4997,7 +4987,7 @@ function makeStateKey(key) {
 }
 function initTransferState() {
   const transferState = new TransferState();
-  if (false) {
+  if (true) {
     transferState.store = retrieveTransferredState(getDocument(), inject(APP_ID));
   }
   return transferState;
@@ -5067,6 +5057,17 @@ var TransferState = class _TransferState {
     return JSON.stringify(this.store).replace(/</g, "\\u003C");
   }
 };
+function retrieveTransferredState(doc, appId) {
+  const script = doc.getElementById(appId + "-state");
+  if (script?.textContent) {
+    try {
+      return JSON.parse(script.textContent);
+    } catch (e) {
+      console.warn("Exception while restoring TransferState for app " + appId, e);
+    }
+  }
+  return {};
+}
 var REFERENCE_NODE_HOST = "h";
 var REFERENCE_NODE_BODY = "b";
 var NODE_NAVIGATION_STEP_FIRST_CHILD = "f";
@@ -5209,6 +5210,23 @@ function setJSActionAttributes(nativeElement, eventTypes, parentDeferBlockId = n
     nativeElement.setAttribute(DEFER_BLOCK_SSR_ID_ATTRIBUTE, blockName);
   }
 }
+var sharedStashFunction = (rEl, eventType, listenerFn) => {
+  const el = rEl;
+  const eventListenerMap = el.__jsaction_fns ?? /* @__PURE__ */ new Map();
+  const eventListeners = eventListenerMap.get(eventType) ?? [];
+  eventListeners.push(listenerFn);
+  eventListenerMap.set(eventType, eventListeners);
+  el.__jsaction_fns = eventListenerMap;
+};
+var sharedMapFunction = (rEl, jsActionMap) => {
+  const el = rEl;
+  let blockName = el.getAttribute(DEFER_BLOCK_SSR_ID_ATTRIBUTE) ?? "";
+  const blockSet = jsActionMap.get(blockName) ?? /* @__PURE__ */ new Set();
+  if (!blockSet.has(el)) {
+    blockSet.add(el);
+  }
+  jsActionMap.set(blockName, blockSet);
+};
 function removeListenersFromBlocks(blockNames, jsActionMap) {
   if (blockNames.length > 0) {
     let blockList = [];
@@ -5230,10 +5248,35 @@ var JSACTION_EVENT_CONTRACT = new InjectionToken(ngDevMode ? "EVENT_CONTRACT_DET
   providedIn: "root",
   factory: () => ({})
 });
+function invokeListeners(event, currentTarget) {
+  const handlerFns = currentTarget?.__jsaction_fns?.get(event.type);
+  if (!handlerFns || !currentTarget?.isConnected) {
+    return;
+  }
+  for (const handler of handlerFns) {
+    handler(event);
+  }
+}
+var stashEventListeners = /* @__PURE__ */ new Map();
+function setStashFn(appId, fn) {
+  stashEventListeners.set(appId, fn);
+  return () => stashEventListeners.delete(appId);
+}
+var isStashEventListenerImplEnabled = false;
 var _stashEventListenerImpl = (lView, target, eventName, wrappedListener) => {
 };
 function stashEventListenerImpl(lView, target, eventName, wrappedListener) {
   _stashEventListenerImpl(lView, target, eventName, wrappedListener);
+}
+function enableStashEventListenerImpl() {
+  if (!isStashEventListenerImplEnabled) {
+    _stashEventListenerImpl = (lView, target, eventName, wrappedListener) => {
+      const appId = lView[INJECTOR].get(APP_ID);
+      const stashEventListener = stashEventListeners.get(appId);
+      stashEventListener?.(target, eventName, wrappedListener);
+    };
+    isStashEventListenerImplEnabled = true;
+  }
 }
 var DEHYDRATED_BLOCK_REGISTRY = new InjectionToken(ngDevMode ? "DEHYDRATED_BLOCK_REGISTRY" : "");
 var DehydratedBlockRegistry = class _DehydratedBlockRegistry {
@@ -5427,6 +5470,13 @@ function markRNodeAsSkippedByHydration(node) {
   patchHydrationInfo(node, { status: HydrationStatus.Skipped });
   ngDevMode.componentsSkippedHydration++;
 }
+function countBlocksSkippedByHydration(injector) {
+  const transferState = injector.get(TransferState);
+  const nghDeferData = transferState.get(NGH_DEFER_BLOCKS_KEY, {});
+  if (ngDevMode) {
+    ngDevMode.deferBlocksWithIncrementalHydration = Object.keys(nghDeferData).length;
+  }
+}
 function markRNodeAsHavingHydrationMismatch(node, expectedNodeDetails = null, actualNodeDetails = null) {
   if (!ngDevMode) {
     throw new Error("Calling `markRNodeAsMismatchedByHydration` in prod mode is not supported and likely a mistake.");
@@ -5461,6 +5511,9 @@ function assertIncrementalHydrationIsConfigured(injector) {
   if (!isIncrementalHydrationEnabled(injector)) {
     throw new RuntimeError(508, "Angular has detected that some `@defer` blocks use `hydrate` triggers, but incremental hydration was not enabled. Please ensure that the `withIncrementalHydration()` call is added as an argument for the `provideClientHydration()` function call in your application config.");
   }
+}
+function assertSsrIdDefined(ssrUniqueId) {
+  assertDefined(ssrUniqueId, "Internal error: expecting an SSR id for a defer block that should be hydrated, but the id is not present");
 }
 function getNgContainerSize(hydrationInfo, index) {
   const data = hydrationInfo.data;
@@ -5533,6 +5586,47 @@ function convertHydrateTriggersToJsAction(triggers) {
   }
   return actionList;
 }
+function getParentBlockHydrationQueue(deferBlockId, injector) {
+  const dehydratedBlockRegistry = injector.get(DEHYDRATED_BLOCK_REGISTRY);
+  const transferState = injector.get(TransferState);
+  const deferBlockParents = transferState.get(NGH_DEFER_BLOCKS_KEY, {});
+  let isTopMostDeferBlock = false;
+  let currentBlockId = deferBlockId;
+  let parentBlockPromise = null;
+  const hydrationQueue = [];
+  while (!isTopMostDeferBlock && currentBlockId) {
+    ngDevMode && assertEqual(hydrationQueue.indexOf(currentBlockId), -1, "Internal error: defer block hierarchy has a cycle.");
+    isTopMostDeferBlock = dehydratedBlockRegistry.has(currentBlockId);
+    const hydratingParentBlock = dehydratedBlockRegistry.hydrating.get(currentBlockId);
+    if (parentBlockPromise === null && hydratingParentBlock != null) {
+      parentBlockPromise = hydratingParentBlock.promise;
+      break;
+    }
+    hydrationQueue.unshift(currentBlockId);
+    currentBlockId = deferBlockParents[currentBlockId][DEFER_PARENT_BLOCK_ID];
+  }
+  return { parentBlockPromise, hydrationQueue };
+}
+function gatherDeferBlocksByJSActionAttribute(doc) {
+  const jsactionNodes = doc.body.querySelectorAll("[jsaction]");
+  const blockMap = /* @__PURE__ */ new Set();
+  const eventTypes = [hoverEventNames.join(":;"), interactionEventNames.join(":;")].join("|");
+  for (let node of jsactionNodes) {
+    const attr = node.getAttribute("jsaction");
+    const blockId = node.getAttribute("ngb");
+    if (attr?.match(eventTypes) && blockId !== null) {
+      blockMap.add(node);
+    }
+  }
+  return blockMap;
+}
+function appendDeferBlocksToJSActionMap(doc, injector) {
+  const blockMap = gatherDeferBlocksByJSActionAttribute(doc);
+  const jsActionMap = injector.get(JSACTION_BLOCK_ELEMENT_MAP);
+  for (let rNode of blockMap) {
+    sharedMapFunction(rNode, jsActionMap);
+  }
+}
 var _retrieveDeferBlockDataImpl = () => {
   return {};
 };
@@ -5547,6 +5641,50 @@ function retrieveDeferBlockDataImpl(injector) {
 }
 function enableRetrieveDeferBlockDataImpl() {
   _retrieveDeferBlockDataImpl = retrieveDeferBlockDataImpl;
+}
+function retrieveDeferBlockData(injector) {
+  return _retrieveDeferBlockDataImpl(injector);
+}
+function isTimerTrigger(triggerInfo) {
+  return typeof triggerInfo === "object" && triggerInfo.trigger === 5;
+}
+function getHydrateTimerTrigger(blockData) {
+  const trigger = blockData[DEFER_HYDRATE_TRIGGERS]?.find((t) => isTimerTrigger(t));
+  return trigger?.delay ?? null;
+}
+function hasHydrateTrigger(blockData, trigger) {
+  return blockData[DEFER_HYDRATE_TRIGGERS]?.includes(trigger) ?? false;
+}
+function createBlockSummary(blockInfo) {
+  return {
+    data: blockInfo,
+    hydrate: {
+      idle: hasHydrateTrigger(
+        blockInfo,
+        0
+        /* DeferBlockTrigger.Idle */
+      ),
+      immediate: hasHydrateTrigger(
+        blockInfo,
+        1
+        /* DeferBlockTrigger.Immediate */
+      ),
+      timer: getHydrateTimerTrigger(blockInfo),
+      viewport: hasHydrateTrigger(
+        blockInfo,
+        2
+        /* DeferBlockTrigger.Viewport */
+      )
+    }
+  };
+}
+function processBlockData(injector) {
+  const blockData = retrieveDeferBlockData(injector);
+  let blockDetails = /* @__PURE__ */ new Map();
+  for (let blockId in blockData) {
+    blockDetails.set(blockId, createBlockSummary(blockData[blockId]));
+  }
+  return blockDetails;
 }
 function isSsrContentsIntegrity(node) {
   return !!node && node.nodeType === Node.COMMENT_NODE && node.textContent?.trim() === SSR_CONTENT_INTEGRITY_MARKER;
@@ -9456,6 +9594,25 @@ function calcPathForNode(tNode, lView, excludedParentNodes) {
   }
   return path;
 }
+function gatherDeferBlocksCommentNodes(doc, node) {
+  const commentNodesIterator = doc.createNodeIterator(node, NodeFilter.SHOW_COMMENT, { acceptNode });
+  let currentNode;
+  const nodesByBlockId = /* @__PURE__ */ new Map();
+  while (currentNode = commentNodesIterator.nextNode()) {
+    const nghPattern = "ngh=";
+    const content = currentNode?.textContent;
+    const nghIdx = content?.indexOf(nghPattern) ?? -1;
+    if (nghIdx > -1) {
+      const nghValue = content.substring(nghIdx + nghPattern.length).trim();
+      ngDevMode && assertEqual(nghValue.startsWith("d"), true, "Invalid defer block id found in a comment node.");
+      nodesByBlockId.set(nghValue, currentNode);
+    }
+  }
+  return nodesByBlockId;
+}
+function acceptNode(node) {
+  return node.textContent?.trimStart().startsWith("ngh=") ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+}
 var _isI18nHydrationSupportEnabled = false;
 var _prepareI18nBlockForHydrationImpl = () => {
 };
@@ -9741,6 +9898,28 @@ function claimDehydratedIcuCaseImpl(lView, icuIndex, caseIndex) {
     }
   }
 }
+function cleanupI18nHydrationData(lView) {
+  const hydrationInfo = lView[HYDRATION];
+  if (hydrationInfo) {
+    const { i18nNodes, dehydratedIcuData: dehydratedIcuDataMap } = hydrationInfo;
+    if (i18nNodes && dehydratedIcuDataMap) {
+      const renderer = lView[RENDERER];
+      for (const dehydratedIcuData of dehydratedIcuDataMap.values()) {
+        cleanupDehydratedIcuData(renderer, i18nNodes, dehydratedIcuData);
+      }
+    }
+    hydrationInfo.i18nNodes = void 0;
+    hydrationInfo.dehydratedIcuData = void 0;
+  }
+}
+function cleanupDehydratedIcuData(renderer, i18nNodes, dehydratedIcuData) {
+  for (const node of dehydratedIcuData.node.cases[dehydratedIcuData.case]) {
+    const rNode = i18nNodes.get(node.index - HEADER_OFFSET);
+    if (rNode) {
+      nativeRemoveNode(renderer, rNode, false);
+    }
+  }
+}
 function removeDehydratedViews(lContainer) {
   const views = lContainer[DEHYDRATED_VIEWS] ?? [];
   const parentLView = lContainer[PARENT];
@@ -9756,6 +9935,18 @@ function removeDehydratedViews(lContainer) {
   }
   lContainer[DEHYDRATED_VIEWS] = retainedViews;
 }
+function removeDehydratedViewList(deferBlock) {
+  const { lContainer } = deferBlock;
+  const dehydratedViews = lContainer[DEHYDRATED_VIEWS];
+  if (dehydratedViews === null)
+    return;
+  const parentLView = lContainer[PARENT];
+  const renderer = parentLView[RENDERER];
+  for (const view of dehydratedViews) {
+    removeDehydratedView(view, renderer);
+    ngDevMode && ngDevMode.dehydratedViewsRemoved++;
+  }
+}
 function removeDehydratedView(dehydratedView, renderer) {
   let nodesRemoved = 0;
   let currentRNode = dehydratedView.firstChild;
@@ -9768,6 +9959,49 @@ function removeDehydratedView(dehydratedView, renderer) {
       currentRNode = nextSibling;
       nodesRemoved++;
     }
+  }
+}
+function cleanupLContainer(lContainer) {
+  removeDehydratedViews(lContainer);
+  const hostLView = lContainer[HOST];
+  if (isLView(hostLView)) {
+    cleanupLView(hostLView);
+  }
+  for (let i = CONTAINER_HEADER_OFFSET; i < lContainer.length; i++) {
+    cleanupLView(lContainer[i]);
+  }
+}
+function cleanupLView(lView) {
+  cleanupI18nHydrationData(lView);
+  const tView = lView[TVIEW];
+  for (let i = HEADER_OFFSET; i < tView.bindingStartIndex; i++) {
+    if (isLContainer(lView[i])) {
+      const lContainer = lView[i];
+      cleanupLContainer(lContainer);
+    } else if (isLView(lView[i])) {
+      cleanupLView(lView[i]);
+    }
+  }
+}
+function cleanupDehydratedViews(appRef) {
+  const viewRefs = appRef._views;
+  for (const viewRef of viewRefs) {
+    const lNode = getLNodeForHydration(viewRef);
+    if (lNode !== null && lNode[HOST] !== null) {
+      if (isLView(lNode)) {
+        cleanupLView(lNode);
+      } else {
+        cleanupLContainer(lNode);
+      }
+      ngDevMode && ngDevMode.dehydratedViewsCleanupRuns++;
+    }
+  }
+}
+function cleanupHydratedDeferBlocks(deferBlock, hydratedBlocks, registry, appRef) {
+  if (deferBlock !== null) {
+    registry.cleanup(hydratedBlocks);
+    cleanupLContainer(deferBlock.lContainer);
+    cleanupDehydratedViews(appRef);
   }
 }
 function locateDehydratedViewsInContainer(currentRNode, serializedViews) {
@@ -12214,7 +12448,7 @@ function getComponentId(componentDef) {
   }
   hash += 2147483647 + 1;
   const compId = "c" + hash;
-  if ((typeof ngDevMode === "undefined" || ngDevMode) && false) {
+  if ((typeof ngDevMode === "undefined" || ngDevMode) && true) {
     if (GENERATED_COMP_IDS.has(compId)) {
       const previousCompDefType = GENERATED_COMP_IDS.get(compId);
       if (previousCompDefType !== componentDef.type) {
@@ -12673,7 +12907,7 @@ var TracingAction;
 })(TracingAction || (TracingAction = {}));
 var TracingService = new InjectionToken(ngDevMode ? "TracingService" : "");
 var SCHEDULE_IN_ROOT_ZONE_DEFAULT = false;
-var EventEmitter_ = class extends import_rxjs2.Subject {
+var EventEmitter_ = class extends Subject {
   // tslint:disable-next-line:require-internal-with-underscore
   __isAsync;
   destroyRef = void 0;
@@ -12714,7 +12948,7 @@ var EventEmitter_ = class extends import_rxjs2.Subject {
       }
     }
     const sink = super.subscribe({ next: nextFn, error: errorFn, complete: completeFn });
-    if (observerOrNext instanceof import_rxjs2.Subscription) {
+    if (observerOrNext instanceof Subscription) {
       observerOrNext.add(sink);
     }
     return sink;
@@ -13274,7 +13508,7 @@ function afterEveryRender(callbackOrSpec, options) {
     assertInInjectionContext(afterEveryRender);
   }
   const injector = options?.injector ?? inject(Injector);
-  if (true) {
+  if (false) {
     return NOOP_AFTER_RENDER_REF;
   }
   performanceMarkFeature("NgAfterRender");
@@ -13291,7 +13525,7 @@ function afterNextRender(callbackOrSpec, options) {
     assertInInjectionContext(afterNextRender);
   }
   const injector = options?.injector ?? inject(Injector);
-  if (true) {
+  if (false) {
     return NOOP_AFTER_RENDER_REF;
   }
   performanceMarkFeature("NgAfterNextRender");
@@ -13331,10 +13565,6 @@ function afterEveryRenderImpl(callbackOrSpec, injector, options, once) {
   manager.impl.register(sequence);
   return sequence;
 }
-var NOOP_AFTER_RENDER_REF = {
-  destroy() {
-  }
-};
 function getDeferBlockDataIndex(deferBlockIndex) {
   return deferBlockIndex + 1;
 }
@@ -13772,7 +14002,7 @@ function renderDeferBlockState(newState, tNode, lContainer, skipTimerScheduling 
   }
   if (isValidStateChange(currentState, newState) && isValidStateChange(lDetails[NEXT_DEFER_BLOCK_STATE] ?? -1, newState)) {
     const tDetails = getTDeferBlockDetails(hostTView, tNode);
-    const needsScheduling = !skipTimerScheduling && false;
+    const needsScheduling = !skipTimerScheduling && true && (getLoadingBlockAfter(tDetails) !== null || getMinimumDurationForState(tDetails, DeferBlockState.Loading) !== null || getMinimumDurationForState(tDetails, DeferBlockState.Placeholder));
     if (ngDevMode && needsScheduling) {
       assertDefined(applyDeferBlockStateWithSchedulingImpl, "Expected scheduling function to be defined");
     }
@@ -15131,7 +15361,7 @@ var ApplicationRef = class _ApplicationRef {
   autoDetectTestViews = /* @__PURE__ */ new Set();
   includeAllTestViews = false;
   /** @internal */
-  afterTick = new import_rxjs2.Subject();
+  afterTick = new Subject();
   /** @internal */
   get allViews() {
     return [
@@ -15159,7 +15389,7 @@ var ApplicationRef = class _ApplicationRef {
    * Returns an Observable that indicates when the application is stable or unstable.
    */
   get isStable() {
-    return this.internalPendingTask.hasPendingTasksObservable.pipe((0, import_operators.map)((pending) => !pending));
+    return this.internalPendingTask.hasPendingTasksObservable.pipe(map((pending) => !pending));
   }
   constructor() {
     inject(TracingService, { optional: true });
@@ -15533,7 +15763,7 @@ function scheduleDelayedTrigger(scheduleFn) {
   storeTriggerCleanupFn(0, lDetails, cleanupFn);
 }
 function scheduleDelayedPrefetching(scheduleFn, trigger) {
-  if (true)
+  if (false)
     return;
   const lView = getLView();
   const injector = lView[INJECTOR];
@@ -15546,6 +15776,16 @@ function scheduleDelayedPrefetching(scheduleFn, trigger) {
     const cleanupFn = scheduleFn(prefetch, injector);
     storeTriggerCleanupFn(1, lDetails, cleanupFn);
   }
+}
+function scheduleDelayedHydrating(scheduleFn, lView, tNode) {
+  if (false)
+    return;
+  const injector = lView[INJECTOR];
+  const lDetails = getLDeferBlockDetails(lView, tNode);
+  const ssrUniqueId = lDetails[SSR_UNIQUE_ID];
+  ngDevMode && assertSsrIdDefined(ssrUniqueId);
+  const cleanupFn = scheduleFn(() => triggerHydrationFromBlockName(injector, ssrUniqueId), injector);
+  storeTriggerCleanupFn(2, lDetails, cleanupFn);
 }
 function triggerPrefetching(tDetails, lView, tNode) {
   triggerResourceLoading(tDetails, lView, tNode);
@@ -15626,7 +15866,7 @@ function triggerResourceLoading(tDetails, lView, tNode) {
   });
 }
 function shouldTriggerDeferBlock(triggerType, lView) {
-  if (triggerType === 0 && true && true) {
+  if (triggerType === 0 && true && false) {
     return false;
   }
   const injector = lView[INJECTOR];
@@ -15670,13 +15910,106 @@ function triggerDeferBlock(triggerType, lView, tNode) {
       }
   }
 }
+async function triggerHydrationFromBlockName(injector, blockName, replayQueuedEventsFn) {
+  const dehydratedBlockRegistry = injector.get(DEHYDRATED_BLOCK_REGISTRY);
+  const blocksBeingHydrated = dehydratedBlockRegistry.hydrating;
+  if (blocksBeingHydrated.has(blockName)) {
+    return;
+  }
+  const { parentBlockPromise, hydrationQueue } = getParentBlockHydrationQueue(blockName, injector);
+  if (hydrationQueue.length === 0)
+    return;
+  if (parentBlockPromise !== null) {
+    hydrationQueue.shift();
+  }
+  populateHydratingStateForQueue(dehydratedBlockRegistry, hydrationQueue);
+  if (parentBlockPromise !== null) {
+    await parentBlockPromise;
+  }
+  const topmostParentBlock = hydrationQueue[0];
+  if (dehydratedBlockRegistry.has(topmostParentBlock)) {
+    await triggerHydrationForBlockQueue(injector, hydrationQueue, replayQueuedEventsFn);
+  } else {
+    dehydratedBlockRegistry.awaitParentBlock(topmostParentBlock, async () => await triggerHydrationForBlockQueue(injector, hydrationQueue, replayQueuedEventsFn));
+  }
+}
+async function triggerHydrationForBlockQueue(injector, hydrationQueue, replayQueuedEventsFn) {
+  const dehydratedBlockRegistry = injector.get(DEHYDRATED_BLOCK_REGISTRY);
+  const blocksBeingHydrated = dehydratedBlockRegistry.hydrating;
+  const pendingTasks = injector.get(PendingTasksInternal);
+  const taskId = pendingTasks.add();
+  for (let blockQueueIdx = 0; blockQueueIdx < hydrationQueue.length; blockQueueIdx++) {
+    const dehydratedBlockId = hydrationQueue[blockQueueIdx];
+    const dehydratedDeferBlock = dehydratedBlockRegistry.get(dehydratedBlockId);
+    if (dehydratedDeferBlock != null) {
+      await triggerResourceLoadingForHydration(dehydratedDeferBlock);
+      await nextRender(injector);
+      if (deferBlockHasErrored(dehydratedDeferBlock)) {
+        removeDehydratedViewList(dehydratedDeferBlock);
+        cleanupRemainingHydrationQueue(hydrationQueue.slice(blockQueueIdx), dehydratedBlockRegistry);
+        break;
+      }
+      blocksBeingHydrated.get(dehydratedBlockId).resolve();
+    } else {
+      cleanupParentContainer(blockQueueIdx, hydrationQueue, dehydratedBlockRegistry);
+      cleanupRemainingHydrationQueue(hydrationQueue.slice(blockQueueIdx), dehydratedBlockRegistry);
+      break;
+    }
+  }
+  const lastBlockName = hydrationQueue[hydrationQueue.length - 1];
+  await blocksBeingHydrated.get(lastBlockName)?.promise;
+  pendingTasks.remove(taskId);
+  if (replayQueuedEventsFn) {
+    replayQueuedEventsFn(hydrationQueue);
+  }
+  cleanupHydratedDeferBlocks(dehydratedBlockRegistry.get(lastBlockName), hydrationQueue, dehydratedBlockRegistry, injector.get(ApplicationRef));
+}
+function deferBlockHasErrored(deferBlock) {
+  return getLDeferBlockDetails(deferBlock.lView, deferBlock.tNode)[DEFER_BLOCK_STATE] === DeferBlockState.Error;
+}
+function cleanupParentContainer(currentBlockIdx, hydrationQueue, dehydratedBlockRegistry) {
+  const parentDeferBlockIdx = currentBlockIdx - 1;
+  const parentDeferBlock = parentDeferBlockIdx > -1 ? dehydratedBlockRegistry.get(hydrationQueue[parentDeferBlockIdx]) : null;
+  if (parentDeferBlock) {
+    cleanupLContainer(parentDeferBlock.lContainer);
+  }
+}
+function cleanupRemainingHydrationQueue(hydrationQueue, dehydratedBlockRegistry) {
+  const blocksBeingHydrated = dehydratedBlockRegistry.hydrating;
+  for (const dehydratedBlockId in hydrationQueue) {
+    blocksBeingHydrated.get(dehydratedBlockId)?.reject();
+  }
+  dehydratedBlockRegistry.cleanup(hydrationQueue);
+}
+function populateHydratingStateForQueue(registry, queue) {
+  for (let blockId of queue) {
+    registry.hydrating.set(blockId, Promise.withResolvers());
+  }
+}
+function nextRender(injector) {
+  return new Promise((resolveFn) => afterNextRender(resolveFn, { injector }));
+}
+async function triggerResourceLoadingForHydration(dehydratedBlock) {
+  const { tNode, lView } = dehydratedBlock;
+  const lDetails = getLDeferBlockDetails(lView, tNode);
+  return new Promise((resolve) => {
+    onDeferBlockCompletion(lDetails, resolve);
+    triggerDeferBlock(2, lView, tNode);
+  });
+}
+function onDeferBlockCompletion(lDetails, callback) {
+  if (!Array.isArray(lDetails[ON_COMPLETE_FNS])) {
+    lDetails[ON_COMPLETE_FNS] = [];
+  }
+  lDetails[ON_COMPLETE_FNS].push(callback);
+}
 function shouldAttachTrigger(triggerType, lView, tNode) {
   if (triggerType === 0) {
     return shouldAttachRegularTrigger(lView, tNode);
   } else if (triggerType === 2) {
     return !shouldAttachRegularTrigger(lView, tNode);
   }
-  return false;
+  return true;
 }
 function hasHydrateTriggers(flags) {
   return flags != null && (flags & 1) === 1;
@@ -15686,7 +16019,7 @@ function shouldAttachRegularTrigger(lView, tNode) {
   const tDetails = getTDeferBlockDetails(lView[TVIEW], tNode);
   const incrementalHydrationEnabled = isIncrementalHydrationEnabled(injector);
   const _hasHydrateTriggers = hasHydrateTriggers(tDetails.flags);
-  if (true) {
+  if (false) {
     return !incrementalHydrationEnabled || !_hasHydrateTriggers;
   }
   const lDetails = getLDeferBlockDetails(lView, tNode);
@@ -15699,6 +16032,74 @@ function shouldAttachRegularTrigger(lView, tNode) {
 function getHydrateTriggers(tView, tNode) {
   const tDetails = getTDeferBlockDetails(tView, tNode);
   return tDetails.hydrateTriggers ??= /* @__PURE__ */ new Map();
+}
+function processAndInitTriggers(injector, blockData, nodes) {
+  const idleElements = [];
+  const timerElements = [];
+  const viewportElements = [];
+  const immediateElements = [];
+  for (let [blockId, blockSummary] of blockData) {
+    const commentNode = nodes.get(blockId);
+    if (commentNode !== void 0) {
+      const numRootNodes = blockSummary.data[NUM_ROOT_NODES];
+      let currentNode = commentNode;
+      for (let i = 0; i < numRootNodes; i++) {
+        currentNode = currentNode.previousSibling;
+        if (currentNode.nodeType !== Node.ELEMENT_NODE) {
+          continue;
+        }
+        const elementTrigger = { el: currentNode, blockName: blockId };
+        if (blockSummary.hydrate.idle) {
+          idleElements.push(elementTrigger);
+        }
+        if (blockSummary.hydrate.immediate) {
+          immediateElements.push(elementTrigger);
+        }
+        if (blockSummary.hydrate.timer !== null) {
+          elementTrigger.delay = blockSummary.hydrate.timer;
+          timerElements.push(elementTrigger);
+        }
+        if (blockSummary.hydrate.viewport) {
+          viewportElements.push(elementTrigger);
+        }
+      }
+    }
+  }
+  setIdleTriggers(injector, idleElements);
+  setImmediateTriggers(injector, immediateElements);
+  setViewportTriggers(injector, viewportElements);
+  setTimerTriggers(injector, timerElements);
+}
+function setIdleTriggers(injector, elementTriggers) {
+  for (const elementTrigger of elementTriggers) {
+    const registry = injector.get(DEHYDRATED_BLOCK_REGISTRY);
+    const onInvoke = () => triggerHydrationFromBlockName(injector, elementTrigger.blockName);
+    const cleanupFn = onIdle(onInvoke, injector);
+    registry.addCleanupFn(elementTrigger.blockName, cleanupFn);
+  }
+}
+function setViewportTriggers(injector, elementTriggers) {
+  if (elementTriggers.length > 0) {
+    const registry = injector.get(DEHYDRATED_BLOCK_REGISTRY);
+    for (let elementTrigger of elementTriggers) {
+      const cleanupFn = onViewportWrapper(elementTrigger.el, () => triggerHydrationFromBlockName(injector, elementTrigger.blockName), injector);
+      registry.addCleanupFn(elementTrigger.blockName, cleanupFn);
+    }
+  }
+}
+function setTimerTriggers(injector, elementTriggers) {
+  for (const elementTrigger of elementTriggers) {
+    const registry = injector.get(DEHYDRATED_BLOCK_REGISTRY);
+    const onInvoke = () => triggerHydrationFromBlockName(injector, elementTrigger.blockName);
+    const timerFn = onTimer(elementTrigger.delay);
+    const cleanupFn = timerFn(onInvoke, injector);
+    registry.addCleanupFn(elementTrigger.blockName, cleanupFn);
+  }
+}
+function setImmediateTriggers(injector, elementTriggers) {
+  for (const elementTrigger of elementTriggers) {
+    triggerHydrationFromBlockName(injector, elementTrigger.blockName);
+  }
 }
 var _hmrWarningProduced = false;
 function logHmrWarning(injector) {
@@ -15850,7 +16251,7 @@ function ɵɵdeferHydrateWhen(rawValue) {
   const hydrateTriggers = getHydrateTriggers(tView, tNode);
   hydrateTriggers.set(6, null);
   if (bindingUpdated(lView, bindingIndex, rawValue)) {
-    if (true) {
+    if (false) {
       triggerDeferBlock(2, lView, tNode);
     } else {
       const injector = lView[INJECTOR];
@@ -15879,7 +16280,7 @@ function ɵɵdeferHydrateNever() {
     return;
   const hydrateTriggers = getHydrateTriggers(getTView(), tNode);
   hydrateTriggers.set(7, null);
-  if (true) {
+  if (false) {
     triggerDeferBlock(2, lView, tNode);
   }
 }
@@ -15913,7 +16314,7 @@ function ɵɵdeferHydrateOnIdle() {
     return;
   const hydrateTriggers = getHydrateTriggers(getTView(), tNode);
   hydrateTriggers.set(0, null);
-  if (true) {
+  if (false) {
     triggerDeferBlock(2, lView, tNode);
   } else {
     scheduleDelayedHydrating(onIdle, lView, tNode);
@@ -15957,7 +16358,7 @@ function ɵɵdeferHydrateOnImmediate() {
     return;
   const hydrateTriggers = getHydrateTriggers(getTView(), tNode);
   hydrateTriggers.set(1, null);
-  if (true) {
+  if (false) {
     triggerDeferBlock(2, lView, tNode);
   } else {
     const injector = lView[INJECTOR];
@@ -15997,7 +16398,7 @@ function ɵɵdeferHydrateOnTimer(delay) {
     return;
   const hydrateTriggers = getHydrateTriggers(getTView(), tNode);
   hydrateTriggers.set(5, { delay });
-  if (true) {
+  if (false) {
     triggerDeferBlock(2, lView, tNode);
   } else {
     scheduleDelayedHydrating(onTimer(delay), lView, tNode);
@@ -16012,7 +16413,7 @@ function ɵɵdeferOnHover(triggerIndex, walkUpTimes) {
   if (!shouldAttachTrigger(0, lView, tNode))
     return;
   renderPlaceholder(lView, tNode);
-  if (false) {
+  if (true) {
     registerDomTrigger(
       lView,
       tNode,
@@ -16058,7 +16459,7 @@ function ɵɵdeferHydrateOnHover() {
     return;
   const hydrateTriggers = getHydrateTriggers(getTView(), tNode);
   hydrateTriggers.set(4, null);
-  if (true) {
+  if (false) {
     triggerDeferBlock(2, lView, tNode);
   }
 }
@@ -16071,7 +16472,7 @@ function ɵɵdeferOnInteraction(triggerIndex, walkUpTimes) {
   if (!shouldAttachTrigger(0, lView, tNode))
     return;
   renderPlaceholder(lView, tNode);
-  if (false) {
+  if (true) {
     registerDomTrigger(
       lView,
       tNode,
@@ -16117,7 +16518,7 @@ function ɵɵdeferHydrateOnInteraction() {
     return;
   const hydrateTriggers = getHydrateTriggers(getTView(), tNode);
   hydrateTriggers.set(3, null);
-  if (true) {
+  if (false) {
     triggerDeferBlock(2, lView, tNode);
   }
 }
@@ -16130,7 +16531,7 @@ function ɵɵdeferOnViewport(triggerIndex, walkUpTimes) {
   if (!shouldAttachTrigger(0, lView, tNode))
     return;
   renderPlaceholder(lView, tNode);
-  if (false) {
+  if (true) {
     registerDomTrigger(
       lView,
       tNode,
@@ -16176,7 +16577,7 @@ function ɵɵdeferHydrateOnViewport() {
     return;
   const hydrateTriggers = getHydrateTriggers(getTView(), tNode);
   hydrateTriggers.set(2, null);
-  if (true) {
+  if (false) {
     triggerDeferBlock(2, lView, tNode);
   }
 }
@@ -20807,7 +21208,7 @@ function getNgZoneOptions(options) {
   };
 }
 var ZoneStablePendingTask = class _ZoneStablePendingTask {
-  subscription = new import_rxjs2.Subscription();
+  subscription = new Subscription();
   initialized = false;
   zone = inject(NgZone);
   pendingTasks = inject(PendingTasksInternal);
@@ -20875,7 +21276,7 @@ var ChangeDetectionSchedulerImpl = class _ChangeDetectionSchedulerImpl {
   disableScheduling = inject(ZONELESS_SCHEDULER_DISABLED, { optional: true }) ?? false;
   zoneIsDefined = typeof Zone !== "undefined" && !!Zone.root.run;
   schedulerTickApplyArgs = [{ data: { "__scheduler_tick__": true } }];
-  subscriptions = new import_rxjs2.Subscription();
+  subscriptions = new Subscription();
   angularZoneId = this.zoneIsDefined ? this.ngZone._inner?.get(angularZoneInstanceIdProperty) : null;
   scheduleInRootZone = !this.zonelessEnabled && this.zoneIsDefined && (inject(SCHEDULE_IN_ROOT_ZONE, { optional: true }) ?? false);
   cancelScheduledCallback = null;
@@ -21979,6 +22380,37 @@ var ResourceWrappedError = class extends Error {
 };
 
 // node_modules/@angular/core/fesm2022/primitives/event-dispatch.mjs
+var Property = {
+  /**
+   * The parsed value of the jsaction attribute is stored in this
+   * property on the DOM node. The parsed value is an Object. The
+   * property names of the object are the events; the values are the
+   * names of the actions. This property is attached even on nodes
+   * that don't have a jsaction attribute as an optimization, because
+   * property lookup is faster than attribute access.
+   */
+  JSACTION: "__jsaction",
+  /**
+   * The owner property references an a logical owner for a DOM node. JSAction
+   * will follow this reference instead of parentNode when traversing the DOM
+   * to find jsaction attributes. This allows overlaying a logical structure
+   * over a document where the DOM structure can't reflect that structure.
+   */
+  OWNER: "__owner"
+};
+var parseCache = {};
+function get(element) {
+  return element[Property.JSACTION];
+}
+function set(element, actionMap) {
+  element[Property.JSACTION] = actionMap;
+}
+function getParsed(text) {
+  return parseCache[text];
+}
+function setParsed(text, parsed) {
+  parseCache[text] = parsed;
+}
 var EventType = {
   /**
    * Mouse middle click, introduced in Chrome 55 and not yet supported on
@@ -22276,18 +22708,829 @@ var CAPTURE_EVENT_TYPES = [
 var isCaptureEventType = (eventType) => CAPTURE_EVENT_TYPES.indexOf(eventType) >= 0;
 var EARLY_EVENT_TYPES = BUBBLE_EVENT_TYPES.concat(CAPTURE_EVENT_TYPES);
 var isEarlyEventType = (eventType) => EARLY_EVENT_TYPES.indexOf(eventType) >= 0;
+function getBrowserEventType(eventType) {
+  if (eventType === EventType.MOUSEENTER) {
+    return EventType.MOUSEOVER;
+  } else if (eventType === EventType.MOUSELEAVE) {
+    return EventType.MOUSEOUT;
+  } else if (eventType === EventType.POINTERENTER) {
+    return EventType.POINTEROVER;
+  } else if (eventType === EventType.POINTERLEAVE) {
+    return EventType.POINTEROUT;
+  }
+  return eventType;
+}
+function addEventListener(element, eventType, handler, passive) {
+  let capture = false;
+  if (isCaptureEventType(eventType)) {
+    capture = true;
+  }
+  const options = typeof passive === "boolean" ? { capture, passive } : capture;
+  element.addEventListener(eventType, handler, options);
+  return { eventType, handler, capture, passive };
+}
+function removeEventListener(element, info) {
+  if (element.removeEventListener) {
+    const options = typeof info.passive === "boolean" ? { capture: info.capture } : info.capture;
+    element.removeEventListener(info.eventType, info.handler, options);
+  } else if (element.detachEvent) {
+    element.detachEvent(`on${info.eventType}`, info.handler);
+  }
+}
+function preventDefault(e) {
+  e.preventDefault ? e.preventDefault() : e.returnValue = false;
+}
 var isMac = typeof navigator !== "undefined" && /Macintosh/.test(navigator.userAgent);
+function isMiddleClick(e) {
+  return (
+    // `which` is an old DOM API.
+    e.which === 2 || // `which` is an old DOM API.
+    e.which == null && // `button` is an old DOM API.
+    e.button === 4
+  );
+}
+function isModifiedClickEvent(e) {
+  return (
+    // `metaKey` is an old DOM API.
+    isMac && e.metaKey || // `ctrlKey` is an old DOM API.
+    !isMac && e.ctrlKey || isMiddleClick(e) || // `shiftKey` is an old DOM API.
+    e.shiftKey
+  );
+}
+function isMouseSpecialEvent(e, type, element) {
+  const related = e.relatedTarget;
+  return (e.type === EventType.MOUSEOVER && type === EventType.MOUSEENTER || e.type === EventType.MOUSEOUT && type === EventType.MOUSELEAVE || e.type === EventType.POINTEROVER && type === EventType.POINTERENTER || e.type === EventType.POINTEROUT && type === EventType.POINTERLEAVE) && (!related || related !== element && !element.contains(related));
+}
+function createMouseSpecialEvent(e, target) {
+  const copy = {};
+  for (const property in e) {
+    if (property === "srcElement" || property === "target") {
+      continue;
+    }
+    const key = property;
+    const value = e[key];
+    if (typeof value === "function") {
+      continue;
+    }
+    copy[key] = value;
+  }
+  if (e.type === EventType.MOUSEOVER) {
+    copy["type"] = EventType.MOUSEENTER;
+  } else if (e.type === EventType.MOUSEOUT) {
+    copy["type"] = EventType.MOUSELEAVE;
+  } else if (e.type === EventType.POINTEROVER) {
+    copy["type"] = EventType.POINTERENTER;
+  } else {
+    copy["type"] = EventType.POINTERLEAVE;
+  }
+  copy["target"] = copy["srcElement"] = target;
+  copy["bubbles"] = false;
+  copy["_originalEvent"] = e;
+  return copy;
+}
 var isIos = typeof navigator !== "undefined" && /iPhone|iPad|iPod/.test(navigator.userAgent);
+var EventContractContainer = class {
+  element;
+  /**
+   * Array of event handlers and their corresponding event types that are
+   * installed on this container.
+   *
+   */
+  handlerInfos = [];
+  /**
+   * @param element The container Element.
+   */
+  constructor(element) {
+    this.element = element;
+  }
+  /**
+   * Installs the provided installer on the element owned by this container,
+   * and maintains a reference to resulting handler in order to remove it
+   * later if desired.
+   */
+  addEventListener(eventType, getHandler, passive) {
+    if (isIos) {
+      this.element.style.cursor = "pointer";
+    }
+    this.handlerInfos.push(addEventListener(this.element, eventType, getHandler(this.element), passive));
+  }
+  /**
+   * Removes all the handlers installed on this container.
+   */
+  cleanUp() {
+    for (let i = 0; i < this.handlerInfos.length; i++) {
+      removeEventListener(this.element, this.handlerInfos[i]);
+    }
+    this.handlerInfos = [];
+  }
+};
+var Char = {
+  /**
+   * The separator between the namespace and the action name in the
+   * jsaction attribute value.
+   */
+  NAMESPACE_ACTION_SEPARATOR: ".",
+  /**
+   * The separator between the event name and action in the jsaction
+   * attribute value.
+   */
+  EVENT_ACTION_SEPARATOR: ":"
+};
+function getEventType(eventInfo) {
+  return eventInfo.eventType;
+}
+function setEventType(eventInfo, eventType) {
+  eventInfo.eventType = eventType;
+}
+function getEvent(eventInfo) {
+  return eventInfo.event;
+}
+function setEvent(eventInfo, event) {
+  eventInfo.event = event;
+}
+function getTargetElement(eventInfo) {
+  return eventInfo.targetElement;
+}
+function setTargetElement(eventInfo, targetElement) {
+  eventInfo.targetElement = targetElement;
+}
+function getContainer(eventInfo) {
+  return eventInfo.eic;
+}
+function setContainer(eventInfo, container) {
+  eventInfo.eic = container;
+}
+function getTimestamp(eventInfo) {
+  return eventInfo.timeStamp;
+}
+function setTimestamp(eventInfo, timestamp) {
+  eventInfo.timeStamp = timestamp;
+}
+function getAction(eventInfo) {
+  return eventInfo.eia;
+}
+function setAction(eventInfo, actionName, actionElement) {
+  eventInfo.eia = [actionName, actionElement];
+}
+function unsetAction(eventInfo) {
+  eventInfo.eia = void 0;
+}
+function getActionElement(actionInfo) {
+  return actionInfo[1];
+}
+function getIsReplay(eventInfo) {
+  return eventInfo.eirp;
+}
+function setIsReplay(eventInfo, replay) {
+  eventInfo.eirp = replay;
+}
+function getResolved(eventInfo) {
+  return eventInfo.eir;
+}
+function setResolved(eventInfo, resolved) {
+  eventInfo.eir = resolved;
+}
+function cloneEventInfo(eventInfo) {
+  return {
+    eventType: eventInfo.eventType,
+    event: eventInfo.event,
+    targetElement: eventInfo.targetElement,
+    eic: eventInfo.eic,
+    eia: eventInfo.eia,
+    timeStamp: eventInfo.timeStamp,
+    eirp: eventInfo.eirp,
+    eiack: eventInfo.eiack,
+    eir: eventInfo.eir
+  };
+}
+function createEventInfoFromParameters(eventType, event, targetElement, container, timestamp, action, isReplay, a11yClickKey) {
+  return {
+    eventType,
+    event,
+    targetElement,
+    eic: container,
+    timeStamp: timestamp,
+    eia: action,
+    eirp: isReplay,
+    eiack: a11yClickKey
+  };
+}
+var EventInfoWrapper = class _EventInfoWrapper {
+  eventInfo;
+  constructor(eventInfo) {
+    this.eventInfo = eventInfo;
+  }
+  getEventType() {
+    return getEventType(this.eventInfo);
+  }
+  setEventType(eventType) {
+    setEventType(this.eventInfo, eventType);
+  }
+  getEvent() {
+    return getEvent(this.eventInfo);
+  }
+  setEvent(event) {
+    setEvent(this.eventInfo, event);
+  }
+  getTargetElement() {
+    return getTargetElement(this.eventInfo);
+  }
+  setTargetElement(targetElement) {
+    setTargetElement(this.eventInfo, targetElement);
+  }
+  getContainer() {
+    return getContainer(this.eventInfo);
+  }
+  setContainer(container) {
+    setContainer(this.eventInfo, container);
+  }
+  getTimestamp() {
+    return getTimestamp(this.eventInfo);
+  }
+  setTimestamp(timestamp) {
+    setTimestamp(this.eventInfo, timestamp);
+  }
+  getAction() {
+    const action = getAction(this.eventInfo);
+    if (!action)
+      return void 0;
+    return {
+      name: action[0],
+      element: action[1]
+    };
+  }
+  setAction(action) {
+    if (!action) {
+      unsetAction(this.eventInfo);
+      return;
+    }
+    setAction(this.eventInfo, action.name, action.element);
+  }
+  getIsReplay() {
+    return getIsReplay(this.eventInfo);
+  }
+  setIsReplay(replay) {
+    setIsReplay(this.eventInfo, replay);
+  }
+  getResolved() {
+    return getResolved(this.eventInfo);
+  }
+  setResolved(resolved) {
+    setResolved(this.eventInfo, resolved);
+  }
+  clone() {
+    return new _EventInfoWrapper(cloneEventInfo(this.eventInfo));
+  }
+};
+var EMPTY_ACTION_MAP = {};
+var REGEXP_SEMICOLON = /\s*;\s*/;
 var DEFAULT_EVENT_TYPE = EventType.CLICK;
+var ActionResolver = class {
+  a11yClickSupport = false;
+  clickModSupport = true;
+  syntheticMouseEventSupport;
+  updateEventInfoForA11yClick = void 0;
+  preventDefaultForA11yClick = void 0;
+  populateClickOnlyAction = void 0;
+  constructor({ syntheticMouseEventSupport = false, clickModSupport = true } = {}) {
+    this.syntheticMouseEventSupport = syntheticMouseEventSupport;
+    this.clickModSupport = clickModSupport;
+  }
+  resolveEventType(eventInfo) {
+    if (this.clickModSupport && getEventType(eventInfo) === EventType.CLICK && isModifiedClickEvent(getEvent(eventInfo))) {
+      setEventType(eventInfo, EventType.CLICKMOD);
+    } else if (this.a11yClickSupport) {
+      this.updateEventInfoForA11yClick(eventInfo);
+    }
+  }
+  resolveAction(eventInfo) {
+    if (getResolved(eventInfo)) {
+      return;
+    }
+    this.populateAction(eventInfo, getTargetElement(eventInfo));
+    setResolved(eventInfo, true);
+  }
+  resolveParentAction(eventInfo) {
+    const action = getAction(eventInfo);
+    const actionElement = action && getActionElement(action);
+    unsetAction(eventInfo);
+    const parentNode = actionElement && this.getParentNode(actionElement);
+    if (!parentNode) {
+      return;
+    }
+    this.populateAction(eventInfo, parentNode);
+  }
+  /**
+   * Searches for a jsaction that the DOM event maps to and creates an
+   * object containing event information used for dispatching by
+   * jsaction.Dispatcher. This method populates the `action` and `actionElement`
+   * fields of the EventInfo object passed in by finding the first
+   * jsaction attribute above the target Node of the event, and below
+   * the container Node, that specifies a jsaction for the event
+   * type. If no such jsaction is found, then action is undefined.
+   *
+   * @param eventInfo `EventInfo` to set `action` and `actionElement` if an
+   *    action is found on any `Element` in the path of the `Event`.
+   */
+  populateAction(eventInfo, currentTarget) {
+    let actionElement = currentTarget;
+    while (actionElement && actionElement !== getContainer(eventInfo)) {
+      if (actionElement.nodeType === Node.ELEMENT_NODE) {
+        this.populateActionOnElement(actionElement, eventInfo);
+      }
+      if (getAction(eventInfo)) {
+        break;
+      }
+      actionElement = this.getParentNode(actionElement);
+    }
+    const action = getAction(eventInfo);
+    if (!action) {
+      return;
+    }
+    if (this.a11yClickSupport) {
+      this.preventDefaultForA11yClick(eventInfo);
+    }
+    if (this.syntheticMouseEventSupport) {
+      if (getEventType(eventInfo) === EventType.MOUSEENTER || getEventType(eventInfo) === EventType.MOUSELEAVE || getEventType(eventInfo) === EventType.POINTERENTER || getEventType(eventInfo) === EventType.POINTERLEAVE) {
+        if (isMouseSpecialEvent(getEvent(eventInfo), getEventType(eventInfo), getActionElement(action))) {
+          const copiedEvent = createMouseSpecialEvent(getEvent(eventInfo), getActionElement(action));
+          setEvent(eventInfo, copiedEvent);
+          setTargetElement(eventInfo, getActionElement(action));
+        } else {
+          unsetAction(eventInfo);
+        }
+      }
+    }
+  }
+  /**
+   * Walk to the parent node, unless the node has a different owner in
+   * which case we walk to the owner. Attempt to walk to host of a
+   * shadow root if needed.
+   */
+  getParentNode(element) {
+    const owner = element[Property.OWNER];
+    if (owner) {
+      return owner;
+    }
+    const parentNode = element.parentNode;
+    if (parentNode?.nodeName === "#document-fragment") {
+      return parentNode?.host ?? null;
+    }
+    return parentNode;
+  }
+  /**
+   * Accesses the jsaction map on a node and retrieves the name of the
+   * action the given event is mapped to, if any. It parses the
+   * attribute value and stores it in a property on the node for
+   * subsequent retrieval without re-parsing and re-accessing the
+   * attribute.
+   *
+   * @param actionElement The DOM node to retrieve the jsaction map from.
+   * @param eventInfo `EventInfo` to set `action` and `actionElement` if an
+   *    action is found on the `actionElement`.
+   */
+  populateActionOnElement(actionElement, eventInfo) {
+    const actionMap = this.parseActions(actionElement);
+    const actionName = actionMap[getEventType(eventInfo)];
+    if (actionName !== void 0) {
+      setAction(eventInfo, actionName, actionElement);
+    }
+    if (this.a11yClickSupport) {
+      this.populateClickOnlyAction(actionElement, eventInfo, actionMap);
+    }
+  }
+  /**
+   * Parses and caches an element's jsaction element into a map.
+   *
+   * This is primarily for internal use.
+   *
+   * @param actionElement The DOM node to retrieve the jsaction map from.
+   * @return Map from event to qualified name of the jsaction bound to it.
+   */
+  parseActions(actionElement) {
+    let actionMap = get(actionElement);
+    if (!actionMap) {
+      const jsactionAttribute = actionElement.getAttribute(Attribute.JSACTION);
+      if (!jsactionAttribute) {
+        actionMap = EMPTY_ACTION_MAP;
+        set(actionElement, actionMap);
+      } else {
+        actionMap = getParsed(jsactionAttribute);
+        if (!actionMap) {
+          actionMap = {};
+          const values = jsactionAttribute.split(REGEXP_SEMICOLON);
+          for (let idx = 0; idx < values.length; idx++) {
+            const value = values[idx];
+            if (!value) {
+              continue;
+            }
+            const colon = value.indexOf(Char.EVENT_ACTION_SEPARATOR);
+            const hasColon = colon !== -1;
+            const type = hasColon ? value.substr(0, colon).trim() : DEFAULT_EVENT_TYPE;
+            const action = hasColon ? value.substr(colon + 1).trim() : value;
+            actionMap[type] = action;
+          }
+          setParsed(jsactionAttribute, actionMap);
+        }
+        set(actionElement, actionMap);
+      }
+    }
+    return actionMap;
+  }
+  addA11yClickSupport(updateEventInfoForA11yClick, preventDefaultForA11yClick, populateClickOnlyAction) {
+    this.a11yClickSupport = true;
+    this.updateEventInfoForA11yClick = updateEventInfoForA11yClick;
+    this.preventDefaultForA11yClick = preventDefaultForA11yClick;
+    this.populateClickOnlyAction = populateClickOnlyAction;
+  }
+};
 var Restriction;
 (function(Restriction2) {
   Restriction2[Restriction2["I_AM_THE_JSACTION_FRAMEWORK"] = 0] = "I_AM_THE_JSACTION_FRAMEWORK";
 })(Restriction || (Restriction = {}));
+var Dispatcher = class {
+  dispatchDelegate;
+  // The ActionResolver to use to resolve actions.
+  actionResolver;
+  /** The replayer function to be called when there are queued events. */
+  eventReplayer;
+  /** Whether the event replay is scheduled. */
+  eventReplayScheduled = false;
+  /** The queue of events. */
+  replayEventInfoWrappers = [];
+  /**
+   * Options are:
+   *   - `eventReplayer`: When the event contract dispatches replay events
+   *      to the Dispatcher, the Dispatcher collects them and in the next tick
+   *      dispatches them to the `eventReplayer`. Defaults to dispatching to `dispatchDelegate`.
+   * @param dispatchDelegate A function that should handle dispatching an `EventInfoWrapper` to handlers.
+   */
+  constructor(dispatchDelegate, { actionResolver, eventReplayer } = {}) {
+    this.dispatchDelegate = dispatchDelegate;
+    this.actionResolver = actionResolver;
+    this.eventReplayer = eventReplayer;
+  }
+  /**
+   * Receives an event or the event queue from the EventContract. The event
+   * queue is copied and it attempts to replay.
+   * If event info is passed in it looks for an action handler that can handle
+   * the given event.  If there is no handler registered queues the event and
+   * checks if a loader is registered for the given namespace. If so, calls it.
+   *
+   * Alternatively, if in global dispatch mode, calls all registered global
+   * handlers for the appropriate event type.
+   *
+   * The three functionalities of this call are deliberately not split into
+   * three methods (and then declared as an abstract interface), because the
+   * interface is used by EventContract, which lives in a different jsbinary.
+   * Therefore the interface between the three is defined entirely in terms that
+   * are invariant under jscompiler processing (Function and Array, as opposed
+   * to a custom type with method names).
+   *
+   * @param eventInfo The info for the event that triggered this call or the
+   *     queue of events from EventContract.
+   */
+  dispatch(eventInfo) {
+    const eventInfoWrapper = new EventInfoWrapper(eventInfo);
+    this.actionResolver?.resolveEventType(eventInfo);
+    this.actionResolver?.resolveAction(eventInfo);
+    const action = eventInfoWrapper.getAction();
+    if (action && shouldPreventDefaultBeforeDispatching(action.element, eventInfoWrapper)) {
+      preventDefault(eventInfoWrapper.getEvent());
+    }
+    if (this.eventReplayer && eventInfoWrapper.getIsReplay()) {
+      this.scheduleEventInfoWrapperReplay(eventInfoWrapper);
+      return;
+    }
+    this.dispatchDelegate(eventInfoWrapper);
+  }
+  /**
+   * Schedules an `EventInfoWrapper` for replay. The replaying will happen in its own
+   * stack once the current flow cedes control. This is done to mimic
+   * browser event handling.
+   */
+  scheduleEventInfoWrapperReplay(eventInfoWrapper) {
+    this.replayEventInfoWrappers.push(eventInfoWrapper);
+    if (this.eventReplayScheduled) {
+      return;
+    }
+    this.eventReplayScheduled = true;
+    Promise.resolve().then(() => {
+      this.eventReplayScheduled = false;
+      this.eventReplayer(this.replayEventInfoWrappers);
+    });
+  }
+};
+function shouldPreventDefaultBeforeDispatching(actionElement, eventInfoWrapper) {
+  return actionElement.tagName === "A" && (eventInfoWrapper.getEventType() === EventType.CLICK || eventInfoWrapper.getEventType() === EventType.CLICKMOD);
+}
 var PROPAGATION_STOPPED_SYMBOL = Symbol.for("propagationStopped");
+var EventPhase = {
+  REPLAY: 101
+};
+var PREVENT_DEFAULT_ERROR_MESSAGE_DETAILS = " Because event replay occurs after browser dispatch, `preventDefault` would have no effect. You can check whether an event is being replayed by accessing the event phase: `event.eventPhase === EventPhase.REPLAY`.";
+var PREVENT_DEFAULT_ERROR_MESSAGE = `\`preventDefault\` called during event replay.`;
+var COMPOSED_PATH_ERROR_MESSAGE_DETAILS = " Because event replay occurs after browser dispatch, `composedPath()` will be empty. Iterate parent nodes from `event.target` or `event.currentTarget` if you need to check elements in the event path.";
+var COMPOSED_PATH_ERROR_MESSAGE = `\`composedPath\` called during event replay.`;
+var EventDispatcher = class {
+  dispatchDelegate;
+  clickModSupport;
+  actionResolver;
+  dispatcher;
+  constructor(dispatchDelegate, clickModSupport = true) {
+    this.dispatchDelegate = dispatchDelegate;
+    this.clickModSupport = clickModSupport;
+    this.actionResolver = new ActionResolver({ clickModSupport });
+    this.dispatcher = new Dispatcher((eventInfoWrapper) => {
+      this.dispatchToDelegate(eventInfoWrapper);
+    }, {
+      actionResolver: this.actionResolver
+    });
+  }
+  /**
+   * The entrypoint for the `EventContract` dispatch.
+   */
+  dispatch(eventInfo) {
+    this.dispatcher.dispatch(eventInfo);
+  }
+  /** Internal method that does basic disaptching. */
+  dispatchToDelegate(eventInfoWrapper) {
+    if (eventInfoWrapper.getIsReplay()) {
+      prepareEventForReplay(eventInfoWrapper);
+    }
+    prepareEventForBubbling(eventInfoWrapper);
+    while (eventInfoWrapper.getAction()) {
+      prepareEventForDispatch(eventInfoWrapper);
+      if (isCaptureEventType(eventInfoWrapper.getEventType()) && eventInfoWrapper.getAction().element !== eventInfoWrapper.getTargetElement()) {
+        return;
+      }
+      this.dispatchDelegate(eventInfoWrapper.getEvent(), eventInfoWrapper.getAction().name);
+      if (propagationStopped(eventInfoWrapper)) {
+        return;
+      }
+      this.actionResolver.resolveParentAction(eventInfoWrapper.eventInfo);
+    }
+  }
+};
+function prepareEventForBubbling(eventInfoWrapper) {
+  const event = eventInfoWrapper.getEvent();
+  const originalStopPropagation = eventInfoWrapper.getEvent().stopPropagation.bind(event);
+  const stopPropagation = () => {
+    event[PROPAGATION_STOPPED_SYMBOL] = true;
+    originalStopPropagation();
+  };
+  patchEventInstance(event, "stopPropagation", stopPropagation);
+  patchEventInstance(event, "stopImmediatePropagation", stopPropagation);
+}
+function propagationStopped(eventInfoWrapper) {
+  const event = eventInfoWrapper.getEvent();
+  return !!event[PROPAGATION_STOPPED_SYMBOL];
+}
+function prepareEventForReplay(eventInfoWrapper) {
+  const event = eventInfoWrapper.getEvent();
+  const target = eventInfoWrapper.getTargetElement();
+  const originalPreventDefault = event.preventDefault.bind(event);
+  patchEventInstance(event, "target", target);
+  patchEventInstance(event, "eventPhase", EventPhase.REPLAY);
+  patchEventInstance(event, "preventDefault", () => {
+    originalPreventDefault();
+    throw new Error(PREVENT_DEFAULT_ERROR_MESSAGE + (ngDevMode ? PREVENT_DEFAULT_ERROR_MESSAGE_DETAILS : ""));
+  });
+  patchEventInstance(event, "composedPath", () => {
+    throw new Error(COMPOSED_PATH_ERROR_MESSAGE + (ngDevMode ? COMPOSED_PATH_ERROR_MESSAGE_DETAILS : ""));
+  });
+}
+function prepareEventForDispatch(eventInfoWrapper) {
+  const event = eventInfoWrapper.getEvent();
+  const currentTarget = eventInfoWrapper.getAction()?.element;
+  if (currentTarget) {
+    patchEventInstance(event, "currentTarget", currentTarget, {
+      // `currentTarget` is going to get reassigned every dispatch.
+      configurable: true
+    });
+  }
+}
+function patchEventInstance(event, property, value, { configurable = false } = {}) {
+  Object.defineProperty(event, property, { value, configurable });
+}
+function registerDispatcher$1(eventContract, dispatcher) {
+  eventContract.ecrd((eventInfo) => {
+    dispatcher.dispatch(eventInfo);
+  }, Restriction.I_AM_THE_JSACTION_FRAMEWORK);
+}
+function getQueuedEventInfos(earlyJsactionData) {
+  return earlyJsactionData?.q ?? [];
+}
+function removeAllEventListeners(earlyJsactionData) {
+  if (!earlyJsactionData) {
+    return;
+  }
+  removeEventListeners(earlyJsactionData.c, earlyJsactionData.et, earlyJsactionData.h);
+  removeEventListeners(earlyJsactionData.c, earlyJsactionData.etc, earlyJsactionData.h, true);
+}
+function removeEventListeners(container, eventTypes, earlyEventHandler, capture) {
+  for (let i = 0; i < eventTypes.length; i++) {
+    container.removeEventListener(
+      eventTypes[i],
+      earlyEventHandler,
+      /* useCapture */
+      capture
+    );
+  }
+}
+var MOUSE_SPECIAL_SUPPORT = false;
+var EventContract = class _EventContract {
+  static MOUSE_SPECIAL_SUPPORT = MOUSE_SPECIAL_SUPPORT;
+  containerManager;
+  /**
+   * The DOM events which this contract covers. Used to prevent double
+   * registration of event types. The value of the map is the
+   * internally created DOM event handler function that handles the
+   * DOM events. See addEvent().
+   *
+   */
+  eventHandlers = {};
+  browserEventTypeToExtraEventTypes = {};
+  /**
+   * The dispatcher function. Events are passed to this function for
+   * handling once it was set using the registerDispatcher() method. This is
+   * done because the function is passed from another jsbinary, so passing the
+   * instance and invoking the method here would require to leave the method
+   * unobfuscated.
+   */
+  dispatcher = null;
+  /**
+   * The list of suspended `EventInfo` that will be dispatched
+   * as soon as the `Dispatcher` is registered.
+   */
+  queuedEventInfos = [];
+  constructor(containerManager) {
+    this.containerManager = containerManager;
+  }
+  handleEvent(eventType, event, container) {
+    const eventInfo = createEventInfoFromParameters(
+      /* eventType= */
+      eventType,
+      /* event= */
+      event,
+      /* targetElement= */
+      event.target,
+      /* container= */
+      container,
+      /* timestamp= */
+      Date.now()
+    );
+    this.handleEventInfo(eventInfo);
+  }
+  /**
+   * Handle an `EventInfo`.
+   */
+  handleEventInfo(eventInfo) {
+    if (!this.dispatcher) {
+      setIsReplay(eventInfo, true);
+      this.queuedEventInfos?.push(eventInfo);
+      return;
+    }
+    this.dispatcher(eventInfo);
+  }
+  /**
+   * Enables jsaction handlers to be called for the event type given by
+   * name.
+   *
+   * If the event is already registered, this does nothing.
+   *
+   * @param prefixedEventType If supplied, this event is used in
+   *     the actual browser event registration instead of the name that is
+   *     exposed to jsaction. Use this if you e.g. want users to be able
+   *     to subscribe to jsaction="transitionEnd:foo" while the underlying
+   *     event is webkitTransitionEnd in one browser and mozTransitionEnd
+   *     in another.
+   *
+   * @param passive A boolean value that, if `true`, indicates that the event
+   *     handler will never call `preventDefault()`.
+   */
+  addEvent(eventType, prefixedEventType, passive) {
+    if (eventType in this.eventHandlers || !this.containerManager) {
+      return;
+    }
+    if (!_EventContract.MOUSE_SPECIAL_SUPPORT && MOUSE_SPECIAL_EVENT_TYPES.indexOf(eventType) >= 0) {
+      return;
+    }
+    const eventHandler = (eventType2, event, container) => {
+      this.handleEvent(eventType2, event, container);
+    };
+    this.eventHandlers[eventType] = eventHandler;
+    const browserEventType = getBrowserEventType(prefixedEventType || eventType);
+    if (browserEventType !== eventType) {
+      const eventTypes = this.browserEventTypeToExtraEventTypes[browserEventType] || [];
+      eventTypes.push(eventType);
+      this.browserEventTypeToExtraEventTypes[browserEventType] = eventTypes;
+    }
+    this.containerManager.addEventListener(browserEventType, (element) => {
+      return (event) => {
+        eventHandler(eventType, event, element);
+      };
+    }, passive);
+  }
+  /**
+   * Gets the queued early events and replay them using the appropriate handler
+   * in the provided event contract. Once all the events are replayed, it cleans
+   * up the early contract.
+   */
+  replayEarlyEvents(earlyJsactionData = window._ejsa) {
+    if (!earlyJsactionData) {
+      return;
+    }
+    this.replayEarlyEventInfos(earlyJsactionData.q);
+    removeAllEventListeners(earlyJsactionData);
+    delete window._ejsa;
+  }
+  /**
+   * Replays all the early `EventInfo` objects, dispatching them through the normal
+   * `EventContract` flow.
+   */
+  replayEarlyEventInfos(earlyEventInfos) {
+    for (let i = 0; i < earlyEventInfos.length; i++) {
+      const earlyEventInfo = earlyEventInfos[i];
+      const eventTypes = this.getEventTypesForBrowserEventType(earlyEventInfo.eventType);
+      for (let j = 0; j < eventTypes.length; j++) {
+        const eventInfo = cloneEventInfo(earlyEventInfo);
+        setEventType(eventInfo, eventTypes[j]);
+        this.handleEventInfo(eventInfo);
+      }
+    }
+  }
+  /**
+   * Returns all JSAction event types that have been registered for a given
+   * browser event type.
+   */
+  getEventTypesForBrowserEventType(browserEventType) {
+    const eventTypes = [];
+    if (this.eventHandlers[browserEventType]) {
+      eventTypes.push(browserEventType);
+    }
+    if (this.browserEventTypeToExtraEventTypes[browserEventType]) {
+      eventTypes.push(...this.browserEventTypeToExtraEventTypes[browserEventType]);
+    }
+    return eventTypes;
+  }
+  /**
+   * Returns the event handler function for a given event type.
+   */
+  handler(eventType) {
+    return this.eventHandlers[eventType];
+  }
+  /**
+   * Cleans up the event contract. This resets all of the `EventContract`'s
+   * internal state. Users are responsible for not using this `EventContract`
+   * after it has been cleaned up.
+   */
+  cleanUp() {
+    this.containerManager?.cleanUp();
+    this.containerManager = null;
+    this.eventHandlers = {};
+    this.browserEventTypeToExtraEventTypes = {};
+    this.dispatcher = null;
+    this.queuedEventInfos = [];
+  }
+  /**
+   * Register a dispatcher function. Event info of each event mapped to
+   * a jsaction is passed for handling to this callback. The queued
+   * events are passed as well to the dispatcher for later replaying
+   * once the dispatcher is registered. Clears the event queue to null.
+   *
+   * @param dispatcher The dispatcher function.
+   * @param restriction
+   */
+  registerDispatcher(dispatcher, restriction) {
+    this.ecrd(dispatcher, restriction);
+  }
+  /**
+   * Unrenamed alias for registerDispatcher. Necessary for any codebases that
+   * split the `EventContract` and `Dispatcher` code into different compilation
+   * units.
+   */
+  ecrd(dispatcher, restriction) {
+    this.dispatcher = dispatcher;
+    if (this.queuedEventInfos?.length) {
+      for (let i = 0; i < this.queuedEventInfos.length; i++) {
+        this.handleEventInfo(this.queuedEventInfos[i]);
+      }
+      this.queuedEventInfos = null;
+    }
+  }
+};
+function getAppScopedQueuedEventInfos(appId, dataContainer = window) {
+  return getQueuedEventInfos(dataContainer._ejsas?.[appId]);
+}
+function clearAppScopedEarlyEventContract(appId, dataContainer = window) {
+  if (!dataContainer._ejsas) {
+    return;
+  }
+  dataContainer._ejsas[appId] = void 0;
+}
 
 // node_modules/@angular/core/fesm2022/core.mjs
-var import_rxjs3 = __toESM(require_cjs(), 1);
-var import_operators2 = __toESM(require_operators(), 1);
 var REQUIRED_UNSET_VALUE = Symbol("InputSignalNode#UNSET");
 var INPUT_SIGNAL_NODE = (() => {
   return __spreadProps(__spreadValues({}, SIGNAL_NODE), {
@@ -22557,7 +23800,7 @@ var ImagePerformanceWarning = class _ImagePerformanceWarning {
   options = inject(IMAGE_CONFIG);
   lcpImageUrl;
   start() {
-    if (true) {
+    if (typeof PerformanceObserver === "undefined" || this.options?.disableImageSizeWarning && this.options?.disableImageLazyLoadWarning) {
       return;
     }
     this.observer = this.initPerformanceObserver();
@@ -24056,13 +25299,19 @@ function internalCreateApplication(config) {
     );
   }
 }
+var appsWithEventReplay = /* @__PURE__ */ new WeakSet();
+var EAGER_CONTENT_LISTENERS_KEY = "";
+var blockEventQueue = [];
+function shouldEnableEventReplay(injector) {
+  return injector.get(IS_EVENT_REPLAY_ENABLED, EVENT_REPLAY_ENABLED_DEFAULT);
+}
 function withEventReplay() {
   const providers = [
     {
       provide: IS_EVENT_REPLAY_ENABLED,
       useFactory: () => {
         let isEnabled = true;
-        if (false) {
+        if (true) {
           const appId = inject(APP_ID);
           isEnabled = !!window._ejsas?.[appId];
         }
@@ -24073,7 +25322,7 @@ function withEventReplay() {
       }
     }
   ];
-  if (false) {
+  if (true) {
     providers.push({
       provide: ENVIRONMENT_INITIALIZER,
       useValue: () => {
@@ -24108,7 +25357,7 @@ function withEventReplay() {
           const appId = injector.get(APP_ID);
           appRef.onDestroy(() => {
             appsWithEventReplay.delete(appRef);
-            if (false) {
+            if (true) {
               clearAppScopedEarlyEventContract(appId);
             }
           });
@@ -24135,6 +25384,24 @@ function withEventReplay() {
   }
   return providers;
 }
+var initEventReplay = (eventDelegation, injector) => {
+  const appId = injector.get(APP_ID);
+  const earlyJsactionData = window._ejsas[appId];
+  const eventContract = eventDelegation.instance = new EventContract(new EventContractContainer(earlyJsactionData.c));
+  for (const et of earlyJsactionData.et) {
+    eventContract.addEvent(et);
+  }
+  for (const et of earlyJsactionData.etc) {
+    eventContract.addEvent(et);
+  }
+  const eventInfos = getAppScopedQueuedEventInfos(appId);
+  eventContract.replayEarlyEventInfos(eventInfos);
+  clearAppScopedEarlyEventContract(appId);
+  const dispatcher = new EventDispatcher((event) => {
+    invokeRegisteredReplayListeners(injector, event, event.currentTarget);
+  });
+  registerDispatcher$1(eventContract, dispatcher);
+};
 function collectDomEventsInfo(tView, lView, eventTypesToReplay) {
   const domEventsInfo = /* @__PURE__ */ new Map();
   const lCleanup = lView[CLEANUP];
@@ -24171,6 +25438,31 @@ function collectDomEventsInfo(tView, lView, eventTypesToReplay) {
     }
   }
   return domEventsInfo;
+}
+function invokeRegisteredReplayListeners(injector, event, currentTarget) {
+  const blockName = (currentTarget && currentTarget.getAttribute(DEFER_BLOCK_SSR_ID_ATTRIBUTE)) ?? "";
+  if (/d\d+/.test(blockName)) {
+    hydrateAndInvokeBlockListeners(blockName, injector, event, currentTarget);
+  } else if (event.eventPhase === EventPhase.REPLAY) {
+    invokeListeners(event, currentTarget);
+  }
+}
+function hydrateAndInvokeBlockListeners(blockName, injector, event, currentTarget) {
+  blockEventQueue.push({ event, currentTarget });
+  triggerHydrationFromBlockName(injector, blockName, replayQueuedBlockEvents);
+}
+function replayQueuedBlockEvents(hydratedBlocks) {
+  const queue = [...blockEventQueue];
+  const hydrated = new Set(hydratedBlocks);
+  blockEventQueue = [];
+  for (let { event, currentTarget } of queue) {
+    const blockName = currentTarget.getAttribute(DEFER_BLOCK_SSR_ID_ATTRIBUTE);
+    if (hydrated.has(blockName)) {
+      invokeListeners(event, currentTarget);
+    } else {
+      blockEventQueue.push({ event, currentTarget });
+    }
+  }
 }
 var SerializedViewCollection = class {
   views = [];
@@ -24553,6 +25845,7 @@ function annotateDeferBlockRootNodesWithJsAction(tDetails, rootNodes, parentDefe
 var isHydrationSupportEnabled = false;
 var isI18nHydrationRuntimeSupportEnabled = false;
 var isIncrementalHydrationRuntimeSupportEnabled = false;
+var APPLICATION_IS_STABLE_TIMEOUT = 1e4;
 function enableHydrationRuntimeSupport() {
   if (!isHydrationSupportEnabled) {
     isHydrationSupportEnabled = true;
@@ -24580,10 +25873,28 @@ function enableIncrementalHydrationRuntimeSupport() {
     enableRetrieveDeferBlockDataImpl();
   }
 }
+function printHydrationStats(injector) {
+  const console2 = injector.get(Console);
+  const message = `Angular hydrated ${ngDevMode.hydratedComponents} component(s) and ${ngDevMode.hydratedNodes} node(s), ${ngDevMode.componentsSkippedHydration} component(s) were skipped. ` + (isIncrementalHydrationEnabled(injector) ? `${ngDevMode.deferBlocksWithIncrementalHydration} defer block(s) were configured to use incremental hydration. ` : "") + `Learn more at https://angular.dev/guide/hydration.`;
+  console2.log(message);
+}
+function whenStableWithTimeout(appRef) {
+  const whenStablePromise = appRef.whenStable();
+  if (typeof ngDevMode !== "undefined" && ngDevMode) {
+    const timeoutTime = APPLICATION_IS_STABLE_TIMEOUT;
+    const console2 = appRef.injector.get(Console);
+    const ngZone = appRef.injector.get(NgZone);
+    const timeoutId = ngZone.runOutsideAngular(() => {
+      return setTimeout(() => logWarningOnStableTimedout(timeoutTime, console2), timeoutTime);
+    });
+    whenStablePromise.finally(() => clearTimeout(timeoutId));
+  }
+  return whenStablePromise;
+}
 var CLIENT_RENDER_MODE_FLAG = "ngcm";
 function isClientRenderModeEnabled() {
   const doc = getDocument();
-  return false;
+  return doc.body.hasAttribute(CLIENT_RENDER_MODE_FLAG);
 }
 function withDomHydration() {
   const providers = [
@@ -24591,7 +25902,7 @@ function withDomHydration() {
       provide: IS_HYDRATION_DOM_REUSE_ENABLED,
       useFactory: () => {
         let isEnabled = true;
-        if (false) {
+        if (true) {
           const transferState = inject(TransferState, { optional: true });
           isEnabled = !!transferState?.get(NGH_DATA_KEY, null);
         }
@@ -24605,7 +25916,7 @@ function withDomHydration() {
       provide: ENVIRONMENT_INITIALIZER,
       useValue: () => {
         setIsI18nHydrationSupportEnabled(false);
-        if (true) {
+        if (false) {
           return;
         }
         if (inject(IS_HYDRATION_DOM_REUSE_ENABLED)) {
@@ -24620,7 +25931,7 @@ function withDomHydration() {
       multi: true
     }
   ];
-  if (false) {
+  if (true) {
     providers.push({
       provide: PRESERVE_HOST_CONTENT,
       useFactory: () => {
@@ -24691,7 +26002,7 @@ function withIncrementalHydration() {
       multi: true
     }
   ];
-  if (false) {
+  if (true) {
     providers.push({
       provide: APP_BOOTSTRAP_LISTENER,
       useFactory: () => {
@@ -24708,6 +26019,10 @@ function withIncrementalHydration() {
     });
   }
   return providers;
+}
+function logWarningOnStableTimedout(time, console2) {
+  const message = `Angular hydration expected the ApplicationRef.isStable() to emit \`true\`, but it didn't happen within ${time}ms. Angular hydration logic depends on the application becoming stable as a signal to complete hydration process.`;
+  console2.warn(formatRuntimeError(-506, message));
 }
 function booleanAttribute(value) {
   return typeof value === "boolean" ? value : value != null && value !== "false";
@@ -24972,7 +26287,7 @@ function afterRenderEffect(callbackOrSpec, options) {
   if (ngDevMode && !options?.injector) {
     assertInInjectionContext(afterRenderEffect);
   }
-  if (true) {
+  if (false) {
     return NOOP_AFTER_RENDER_REF;
   }
   const injector = options?.injector ?? inject(Injector);
@@ -25530,7 +26845,6 @@ export {
 @angular/core/fesm2022/primitives/signals.mjs:
 @angular/core/fesm2022/root_effect_scheduler.mjs:
 @angular/core/fesm2022/attribute.mjs:
-@angular/core/fesm2022/debug_node.mjs:
 @angular/core/fesm2022/resource.mjs:
 @angular/core/fesm2022/primitives/event-dispatch.mjs:
   (**
@@ -25540,17 +26854,6 @@ export {
    *)
 
 @angular/core/fesm2022/debug_node.mjs:
-@angular/core/fesm2022/debug_node.mjs:
-@angular/core/fesm2022/debug_node.mjs:
-@angular/core/fesm2022/core.mjs:
-  (*!
-   * @license
-   * Copyright Google LLC All Rights Reserved.
-   *
-   * Use of this source code is governed by an MIT-style license that can be
-   * found in the LICENSE file at https://angular.dev/license
-   *)
-
 @angular/core/fesm2022/core.mjs:
   (**
    * @license Angular v20.0.5
@@ -25564,5 +26867,14 @@ export {
    * Use of this source code is governed by an MIT-style license that can be
    * found in the LICENSE file at https://angular.dev/license
    *)
+
+@angular/core/fesm2022/debug_node.mjs:
+  (*!
+   * @license
+   * Copyright Google LLC All Rights Reserved.
+   *
+   * Use of this source code is governed by an MIT-style license that can be
+   * found in the LICENSE file at https://angular.dev/license
+   *)
 */
-//# sourceMappingURL=chunk-TZVQPPWW.js.map
+//# sourceMappingURL=chunk-FIWRPDVO.js.map

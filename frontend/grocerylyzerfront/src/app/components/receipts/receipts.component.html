@@ -5,15 +5,195 @@
   </div>
 
   <div class="upload-area">
-    <div class="upload-icon">📄</div>
-    <div class="upload-text">{{ 'receipts.upload.title' | translate }}</div>
-    <div class="upload-subtext">{{ 'receipts.upload.subtitle' | translate }}</div>
+    <div class="flex items-center justify-center w-full">
+      <label 
+        for="dropzone-file" 
+        class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+        [class.drag-over]="dragOver"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)">
+        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+          <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+          </svg>
+          <p class="mb-2 text-sm text-gray-500">
+            <span class="font-semibold">Haz clic para subir</span> o arrastra y suelta
+          </p>
+          <p class="text-xs text-gray-500">PDF de recibo de supermercado (MAX. 10MB)</p>
+        </div>
+        <input 
+          id="dropzone-file" 
+          type="file" 
+          class="hidden" 
+          accept=".pdf"
+          (change)="onFileSelected($event)" />
+      </label>
+    </div>
+    
+    <!-- Archivo seleccionado -->
+    <div *ngIf="selectedFile" class="selected-file-info mt-4">
+      <div class="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <div class="flex-1">
+          <p class="font-medium text-green-800">{{ selectedFile.name }}</p>
+          <p class="text-sm text-green-600">{{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB</p>
+        </div>
+        <button 
+          class="text-red-500 hover:text-red-700 p-1"
+          (click)="removeSelectedFile()">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Botón de subida -->
+    <div *ngIf="selectedFile && !isUploading" class="mt-4 text-center">
+      <button 
+        class="upload-btn"
+        (click)="uploadFile()">
+        Procesar Recibo
+      </button>
+    </div>
+
+    <!-- Progreso de subida -->
+    <div *ngIf="isUploading" class="mt-4">
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="uploadProgress"></div>
+        </div>
+        <p class="progress-text">Procesando recibo... {{ uploadProgress }}%</p>
+      </div>
+    </div>
+
+    <!-- Mensajes -->
+    <div *ngIf="uploadError" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+      <p class="text-red-800">{{ uploadError }}</p>
+    </div>
+    <div *ngIf="uploadMessage" class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+      <p class="text-green-800">{{ uploadMessage }}</p>
+    </div>
   </div>
 
   <div class="receipts-list">
     <h2 class="list-title">{{ 'receipts.list.title' | translate }}</h2>
-    <div class="no-receipts">
-      {{ 'receipts.list.empty' | translate }}
+    
+    <!-- Spinner de carga -->
+    <div *ngIf="isLoading" class="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+    
+    <!-- Lista de recibos -->
+    <div *ngIf="!isLoading && receipts.length > 0" class="receipts-grid">
+      <div *ngFor="let receipt of receipts" class="receipt-card">
+        <div class="receipt-header">
+          <div class="receipt-info">
+            <h3>{{ receipt.supermarket }}</h3>
+            <p class="receipt-date">{{ receipt.date }}</p>
+          </div>
+          <div class="receipt-actions">
+            <button class="view-btn" (click)="viewReceipt(receipt.id)" title="Ver detalles">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </button>
+            <button class="delete-btn" (click)="deleteReceipt(receipt.id)" title="Eliminar">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="receipt-stats">
+          <div class="stat">
+            <div class="stat-label">Total</div>
+            <div class="stat-value">${{ receipt.total.toFixed(2) }}</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Productos</div>
+            <div class="stat-value">{{ receipt.products_count }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Mensaje cuando no hay recibos -->
+    <div *ngIf="!isLoading && receipts.length === 0" class="no-receipts">
+      <div class="empty-icon">📄</div>
+      <h3>{{ 'receipts.list.empty' | translate }}</h3>
+      <p>Sube tu primer recibo para comenzar</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de detalles del recibo -->
+<div *ngIf="showDetailModal" class="modal-overlay" (click)="closeDetailModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Detalles del Recibo</h2>
+      <button class="close-btn" (click)="closeDetailModal()">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- Loading state -->
+      <div *ngIf="isLoadingDetail" class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando detalles...</p>
+      </div>
+      
+      <!-- Error state -->
+      <div *ngIf="detailError" class="error-state">
+        <div class="error-icon">❌</div>
+        <p>{{ detailError }}</p>
+        <button class="retry-btn" (click)="closeDetailModal()">Cerrar</button>
+      </div>
+      
+      <!-- Content -->
+      <div *ngIf="!isLoadingDetail && !detailError && selectedReceipt" class="receipt-detail">
+        <div class="receipt-info">
+          <div class="info-row">
+            <span class="label">Supermercado:</span>
+            <span class="value">{{ selectedReceipt.supermarket }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Fecha:</span>
+            <span class="value">{{ selectedReceipt.date }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Total:</span>
+            <span class="value total">${{ selectedReceipt.total.toFixed(2) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Productos:</span>
+            <span class="value">{{ selectedReceipt.products_count }} artículos</span>
+          </div>
+        </div>
+        
+        <div class="products-section">
+          <h3>Lista de Productos</h3>
+          <div class="products-list">
+            <div *ngFor="let product of selectedReceipt.products" class="product-item">
+              <div class="product-info">
+                <span class="product-name">{{ product.name }}</span>
+                <span class="product-quantity">Cantidad: {{ product.quantity }}</span>
+              </div>
+              <div class="product-prices">
+                <span class="unit-price">${{ product.unit_price.toFixed(2) }} c/u</span>
+                <span class="total-price">${{ product.total_price.toFixed(2) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
