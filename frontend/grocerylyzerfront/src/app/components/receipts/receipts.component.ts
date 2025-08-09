@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ReceiptService, Receipt } from '../../services/receipt.service';
 import { AuthService } from '../../services/auth.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-receipts',
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './receipts.component.html',
   styleUrl: './receipts.component.scss'
 })
