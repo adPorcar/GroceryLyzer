@@ -2,8 +2,8 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Sum, Avg, Count, Max, Min
-from django.db.models.functions import TruncMonth, TruncWeek, TruncYear
+from django.db.models import Sum, Avg, Count, Max, Min, Q
+from django.db.models.functions import TruncMonth, TruncWeek, TruncYear, TruncDay
 from datetime import datetime, timedelta
 from receipts.models import Receipt, Product
 from collections import defaultdict
@@ -413,6 +413,312 @@ def get_supermarket_ranking(request):
             'cheapest_supermarket': cheapest,
             'most_expensive_supermarket': most_expensive,
             'general_statistics': general_stats
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+
+@require_http_methods(["GET"])
+def get_dashboard_overview(request):
+    """API endpoint para obtener datos generales del dashboard"""
+    
+    # Filtros de fecha
+    year = request.GET.get('year')
+    month = request.GET.get('month')
+    week = request.GET.get('week')
+    
+    try:
+        # Base queryset
+        receipts_query = Receipt.objects.all()
+        products_query = Product.objects.all()
+        
+        # Aplicar filtros de fecha
+        if year:
+            receipts_query = receipts_query.filter(date__year=year)
+            products_query = products_query.filter(receipt__date__year=year)
+        
+        if month:
+            receipts_query = receipts_query.filter(date__month=month)
+            products_query = products_query.filter(receipt__date__month=month)
+        
+        if week:
+            # Filtrar por semana del año
+            receipts_query = receipts_query.filter(date__week=week)
+            products_query = products_query.filter(receipt__date__week=week)
+        
+        # Estadísticas básicas
+        total_spent = receipts_query.aggregate(total=Sum('total_amount'))['total'] or 0
+        total_receipts = receipts_query.count()
+        total_products = products_query.aggregate(total=Sum('quantity'))['total'] or 0
+        avg_receipt = receipts_query.aggregate(avg=Avg('total_amount'))['avg'] or 0
+        
+        # Supermercados únicos
+        unique_supermarkets = receipts_query.values('supermarket_name').distinct().count()
+        
+        # Periodo de análisis
+        if receipts_query.exists():
+            first_receipt = receipts_query.order_by('date').first().date
+            last_receipt = receipts_query.order_by('-date').first().date
+            days_analyzed = (last_receipt - first_receipt).days + 1
+        else:
+            first_receipt = None
+            last_receipt = None
+            days_analyzed = 0
+        
+        # Gasto por supermercado
+        supermarket_spending = receipts_query.values('supermarket_name').annotate(
+            total=Sum('total_amount'),
+            receipts_count=Count('id'),
+            avg_receipt=Avg('total_amount')
+        ).order_by('-total')
+        
+        # Top 3 productos más comprados (por gasto)
+        top_products = products_query.values('name').annotate(
+            total_spent=Sum('price'),
+            total_quantity=Sum('quantity'),
+            avg_price=Avg('price')
+        ).order_by('-total_spent')[:3]
+        
+        return JsonResponse({
+            'success': True,
+            'filters': {
+                'year': year,
+                'month': month,
+                'week': week
+            },
+            'overview': {
+                'total_spent': float(total_spent),
+                'total_receipts': total_receipts,
+                'total_products': total_products,
+                'avg_receipt': round(float(avg_receipt), 2),
+                'unique_supermarkets': unique_supermarkets,
+                'days_analyzed': days_analyzed,
+                'first_receipt': first_receipt.strftime('%Y-%m-%d') if first_receipt else None,
+                'last_receipt': last_receipt.strftime('%Y-%m-%d') if last_receipt else None
+            },
+            'supermarket_spending': [
+                {
+                    'name': item['supermarket_name'],
+                    'total': float(item['total']),
+                    'receipts': item['receipts_count'],
+                    'avg_receipt': round(float(item['avg_receipt']), 2)
+                }
+                for item in supermarket_spending
+            ],
+            'top_products': [
+                {
+                    'name': item['name'],
+                    'total_spent': float(item['total_spent']),
+                    'total_quantity': item['total_quantity'],
+                    'avg_price': round(float(item['avg_price']), 2)
+                }
+                for item in top_products
+            ]
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+
+@require_http_methods(["GET"])
+def get_monthly_comparison(request):
+    """API endpoint para comparación mensual con datos para gráfico de barras"""
+    
+    year = request.GET.get('year')
+    
+    try:
+        # Base queryset
+        query = Receipt.objects.all()
+        
+        if year:
+            query = query.filter(date__year=year)
+        
+        # Agrupar por mes
+        monthly_data = query.annotate(
+            month=TruncMonth('date')
+        ).values('month').annotate(
+            total_spent=Sum('total_amount'),
+            receipt_count=Count('id'),
+            avg_receipt=Avg('total_amount')
+        ).order_by('month')
+        
+        # Formatear datos para el frontend
+        months_data = []
+        for data in monthly_data:
+            months_data.append({
+                'month': data['month'].strftime('%Y-%m'),
+                'month_name': data['month'].strftime('%B %Y'),
+                'total_spent': float(data['total_spent']),
+                'receipt_count': data['receipt_count'],
+                'avg_receipt': round(float(data['avg_receipt']), 2)
+            })
+        
+        # Encontrar mejor y peor mes
+        if months_data:
+            best_month = max(months_data, key=lambda x: x['total_spent'])
+            worst_month = min(months_data, key=lambda x: x['total_spent'])
+        else:
+            best_month = None
+            worst_month = None
+        
+        return JsonResponse({
+            'success': True,
+            'year_filter': year,
+            'monthly_data': months_data,
+            'insights': {
+                'best_month': best_month,
+                'worst_month': worst_month,
+                'total_months': len(months_data)
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+
+@require_http_methods(["GET"])
+def get_price_trends(request):
+    """API endpoint para obtener tendencias de precio de los productos más comprados"""
+    
+    year = request.GET.get('year')
+    month = request.GET.get('month')
+    
+    try:
+        # Base queryset
+        products_query = Product.objects.select_related('receipt')
+        
+        # Aplicar filtros
+        if year:
+            products_query = products_query.filter(receipt__date__year=year)
+        if month:
+            products_query = products_query.filter(receipt__date__month=month)
+        
+        # Obtener top 3 productos por gasto total
+        top_products = products_query.values('name').annotate(
+            total_spent=Sum('price')
+        ).order_by('-total_spent')[:3]
+        
+        trends_data = []
+        
+        for product_data in top_products:
+            product_name = product_data['name']
+            
+            # Obtener historial de precios para este producto
+            price_history = products_query.filter(
+                name=product_name
+            ).order_by('receipt__date').values(
+                'receipt__date', 'price', 'receipt__supermarket_name'
+            )
+            
+            history_list = []
+            for item in price_history:
+                history_list.append({
+                    'date': item['receipt__date'].strftime('%Y-%m-%d'),
+                    'price': float(item['price']),
+                    'supermarket': item['receipt__supermarket_name']
+                })
+            
+            # Calcular tendencia (simple: precio final vs inicial)
+            if len(history_list) > 1:
+                initial_price = history_list[0]['price']
+                final_price = history_list[-1]['price']
+                trend_percentage = ((final_price - initial_price) / initial_price) * 100
+            else:
+                trend_percentage = 0
+            
+            trends_data.append({
+                'product_name': product_name,
+                'total_spent': float(product_data['total_spent']),
+                'price_history': history_list,
+                'trend_percentage': round(trend_percentage, 2),
+                'trend_direction': 'up' if trend_percentage > 0 else 'down' if trend_percentage < 0 else 'stable'
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'filters': {
+                'year': year,
+                'month': month
+            },
+            'price_trends': trends_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+
+@require_http_methods(["GET"])
+def get_supermarket_savings(request):
+    """API endpoint para calcular ahorros potenciales entre supermercados"""
+    
+    year = request.GET.get('year')
+    month = request.GET.get('month')
+    
+    try:
+        # Base queryset
+        products_query = Product.objects.select_related('receipt')
+        
+        # Aplicar filtros
+        if year:
+            products_query = products_query.filter(receipt__date__year=year)
+        if month:
+            products_query = products_query.filter(receipt__date__month=month)
+        
+        # Obtener productos que aparecen en múltiples supermercados
+        common_products = products_query.values('name').annotate(
+            supermarket_count=Count('receipt__supermarket_name', distinct=True),
+            total_purchases=Count('id')
+        ).filter(supermarket_count__gt=1).order_by('-total_purchases')[:10]
+        
+        savings_analysis = []
+        
+        for product_data in common_products:
+            product_name = product_data['name']
+            
+            # Obtener precios por supermercado para este producto
+            supermarket_prices = products_query.filter(
+                name=product_name
+            ).values('receipt__supermarket_name').annotate(
+                avg_price=Avg('price'),
+                min_price=Min('price'),
+                max_price=Max('price'),
+                purchase_count=Count('id')
+            ).order_by('avg_price')
+            
+            if len(supermarket_prices) > 1:
+                cheapest = supermarket_prices[0]
+                most_expensive = list(supermarket_prices)[-1]
+                
+                potential_saving = float(most_expensive['avg_price']) - float(cheapest['avg_price'])
+                saving_percentage = (potential_saving / float(most_expensive['avg_price'])) * 100
+                
+                savings_analysis.append({
+                    'product_name': product_name,
+                    'total_purchases': product_data['total_purchases'],
+                    'cheapest_supermarket': {
+                        'name': cheapest['receipt__supermarket_name'],
+                        'avg_price': round(float(cheapest['avg_price']), 2),
+                        'purchase_count': cheapest['purchase_count']
+                    },
+                    'most_expensive_supermarket': {
+                        'name': most_expensive['receipt__supermarket_name'],
+                        'avg_price': round(float(most_expensive['avg_price']), 2),
+                        'purchase_count': most_expensive['purchase_count']
+                    },
+                    'potential_saving': round(potential_saving, 2),
+                    'saving_percentage': round(saving_percentage, 2),
+                    'supermarket_count': product_data['supermarket_count']
+                })
+        
+        # Calcular ahorro total potencial
+        total_potential_saving = sum(item['potential_saving'] for item in savings_analysis)
+        
+        return JsonResponse({
+            'success': True,
+            'filters': {
+                'year': year,
+                'month': month
+            },
+            'savings_analysis': savings_analysis,
+            'total_potential_saving': round(total_potential_saving, 2),
+            'products_analyzed': len(savings_analysis)
         })
         
     except Exception as e:
