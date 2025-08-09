@@ -1,0 +1,81 @@
+<div class="receipt-detail-container">
+  <!-- Header -->
+  <div class="detail-header">
+    <button class="back-btn" (click)="goBack()">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+      Volver a Recibos
+    </button>
+    
+    <div class="header-actions" *ngIf="receipt">
+      <button class="delete-btn" (click)="deleteReceipt()">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+        </svg>
+        Eliminar
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando detalles del recibo...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error && !isLoading" class="error-container">
+    <div class="error-icon">⚠️</div>
+    <h3>Error</h3>
+    <p>{{ error }}</p>
+    <button class="retry-btn" (click)="loadReceiptDetail()">Reintentar</button>
+  </div>
+
+  <!-- Receipt Details -->
+  <div *ngIf="receipt && !isLoading" class="receipt-content">
+    <!-- Receipt Info Card -->
+    <div class="info-card">
+      <div class="card-header">
+        <h1>{{ receipt.supermarket }}</h1>
+        <div class="receipt-date">{{ receipt.date }}</div>
+      </div>
+      
+      <div class="summary-stats">
+        <div class="stat-item">
+          <div class="stat-label">Total</div>
+          <div class="stat-value total">${{ receipt.total.toFixed(2) }}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Productos</div>
+          <div class="stat-value">{{ receipt.products_count }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Products List -->
+    <div class="products-card">
+      <h2 class="products-title">Productos</h2>
+      
+      <div *ngIf="receipt.products && receipt.products.length > 0" class="products-list">
+        <div *ngFor="let product of receipt.products; let i = index" class="product-item">
+          <div class="product-info">
+            <div class="product-name">{{ product.name }}</div>
+            <div class="product-details">
+              <span class="quantity">Cantidad: {{ product.quantity }}</span>
+              <span class="unit-price">Precio unitario: ${{ product.unit_price.toFixed(2) }}</span>
+            </div>
+          </div>
+          <div class="product-total">
+            ${{ product.total_price.toFixed(2) }}
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!receipt.products || receipt.products.length === 0" class="no-products">
+        <div class="empty-icon">📦</div>
+        <p>No se encontraron productos en este recibo</p>
+      </div>
+    </div>
+  </div>
+</div>

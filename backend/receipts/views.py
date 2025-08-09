@@ -1,4 +1,14 @@
 # views.py - API Backend para OCR de recibos
+
+# Parche para compatibilidad con PIL
+try:
+    from PIL import Image
+    if not hasattr(Image, 'ANTIALIAS'):
+        Image.ANTIALIAS = Image.LANCZOS
+        print("✓ Parche PIL.ANTIALIAS aplicado globalmente")
+except Exception as e:
+    print(f"Advertencia al aplicar parche PIL global: {e}")
+
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -24,36 +34,83 @@ def extract_with_ocr(pdf_path):
         reader = easyocr.Reader(['es', 'en'])  # Español e inglés
         print("✓ EasyOCR inicializado")
         
-        # Convertir PDF a imágenes
-        images = convert_from_path(pdf_path, dpi=300)
-        print(f"Convertido a {len(images)} imágenes")
+        # Parchear PIL.Image.ANTIALIAS si no existe
+        try:
+            from PIL import Image
+            if not hasattr(Image, 'ANTIALIAS'):
+                Image.ANTIALIAS = Image.LANCZOS
+                print("✓ Parche PIL.ANTIALIAS aplicado")
+        except Exception as patch_error:
+            print(f"Advertencia al aplicar parche PIL: {patch_error}")
+        
+        # Convertir PDF a imágenes con configuración compatible
+        try:
+            # Usar configuración más básica para evitar problemas de PIL
+            images = convert_from_path(
+                pdf_path, 
+                dpi=200,  # Reducir DPI para evitar problemas
+                fmt='RGB'  # Especificar formato
+            )
+            print(f"Convertido a {len(images)} imágenes")
+        except Exception as convert_error:
+            print(f"Error en conversión PDF->imagen: {convert_error}")
+            # Intentar con configuración mínima
+            try:
+                images = convert_from_path(pdf_path, dpi=150)
+                print(f"Convertido con DPI reducido: {len(images)} imágenes")
+            except Exception as convert_error2:
+                print(f"Error en segunda conversión: {convert_error2}")
+                # Último intento con configuración muy básica
+                images = convert_from_path(pdf_path)
+                print(f"Convertido con configuración básica: {len(images)} imágenes")
         
         full_text = ""
         for i, image in enumerate(images):
             print(f"Procesando página {i+1}...")
             
-            # Convertir PIL Image a numpy array
-            img_array = np.array(image)
-            
-            # Extraer texto con EasyOCR
-            results = reader.readtext(img_array)
-            
-            page_text = ""
-            for (bbox, text, confidence) in results:
-                if confidence > 0.5:  # Solo texto con confianza > 50%
-                    page_text += text + " "
-            
-            full_text += page_text + "\n"
-            
-            print(f"Texto extraído de página {i+1}: {len(page_text)} caracteres")
-            if page_text.strip():
-                print(f"Preview: {page_text[:200]}...")
+            try:
+                # Convertir PIL Image a numpy array de forma segura
+                # Asegurarse de que la imagen esté en RGB
+                if image.mode != 'RGB':
+                    image = image.convert('RGB')
+                img_array = np.array(image)
+                
+                # Extraer texto con EasyOCR
+                results = reader.readtext(img_array)
+                
+                page_text = ""
+                for (bbox, text, confidence) in results:
+                    if confidence > 0.5:  # Solo texto con confianza > 50%
+                        page_text += text + " "
+                
+                full_text += page_text + "\n"
+                
+                print(f"Texto extraído de página {i+1}: {len(page_text)} caracteres")
+                if page_text.strip():
+                    print(f"Preview: {page_text[:200]}...")
+                    
+            except Exception as page_error:
+                print(f"Error procesando página {i+1}: {page_error}")
+                continue
         
+        print(f"✓ OCR completado. Total de texto: {len(full_text)} caracteres")
         return full_text
         
     except Exception as e:
         print(f"Error en OCR: {e}")
-        return ""
+        print("🔄 Intentando extracción básica de texto...")
+        # Como último recurso, intentar solo pdfplumber
+        try:
+            with pdfplumber.open(pdf_path) as pdf:
+                text = ""
+                for page in pdf.pages:
+                    page_text = page.extract_text() or ""
+                    text += page_text + "\n"
+                print(f"✓ Texto extraído con pdfplumber: {len(text)} caracteres")
+                return text
+        except Exception as fallback_error:
+            print(f"Error en método de respaldo: {fallback_error}")
+            return ""
 
 def parse_receipt_pdf_ocr(pdf_path):
     """
@@ -87,7 +144,13 @@ def parse_receipt_pdf_ocr(pdf_path):
         
         if not text.strip():
             print("❌ No se pudo extraer texto ni con OCR")
-            return data
+            # Devolver datos básicos en lugar de None
+            return {
+                "supermarket": "Desconocido",
+                "datetime": datetime.now(),
+                "total_amount": 0.0,
+                "items": [],
+            }
         
         print("\n" + "=" * 50)
         print("TEXTO FINAL EXTRAÍDO:")
@@ -280,39 +343,60 @@ def parse_receipt_pdf_ocr(pdf_path):
         
     except Exception as e:
         print(f"❌ Error general: {e}")
-        return None
+        # Devolver datos básicos en lugar de None
+        return {
+            "supermarket": "Desconocido",
+            "datetime": datetime.now(),
+            "total_amount": 0.0,
+            "items": [],
+        }
     
+    print(f"✅ Datos finales procesados: {data}")
     return data
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def receipt_upload_view(request):
     """API endpoint para subir y procesar recibos PDF con OCR"""
+    print("🔥 NUEVA PETICIÓN DE UPLOAD")
+    print(f"Files en request: {list(request.FILES.keys())}")
+    
     if 'receipt' not in request.FILES:
+        print("❌ No se encontró archivo 'receipt' en request.FILES")
         return JsonResponse({'error': 'No se ha subido ningún archivo'}, status=400)
     
     pdf_file = request.FILES["receipt"]
+    print(f"✓ Archivo recibido: {pdf_file.name} ({pdf_file.size} bytes)")
     
     # Validar que es un PDF
     if not pdf_file.name.endswith('.pdf'):
+        print(f"❌ Archivo no es PDF: {pdf_file.name}")
         return JsonResponse({'error': 'Solo se permiten archivos PDF'}, status=400)
     
     try:
+        print("💾 Guardando archivo temporal...")
         # Guardar temporalmente el archivo
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
             for chunk in pdf_file.chunks():
                 temp_file.write(chunk)
             temp_path = temp_file.name
         
+        print(f"✓ Archivo guardado en: {temp_path}")
+        
         # Procesar el PDF con OCR
+        print("🔍 Iniciando procesamiento con OCR...")
         parsed = parse_receipt_pdf_ocr(temp_path)
+        print(f"✓ Procesamiento completado. Resultado: {parsed}")
         
         # Limpiar archivo temporal
         os.unlink(temp_path)
+        print("✓ Archivo temporal eliminado")
         
         if not parsed:
+            print("❌ No se pudo procesar el PDF - parsed is None/False")
             return JsonResponse({'error': 'No se pudo procesar el PDF'}, status=400)
         
+        print("💾 Guardando en base de datos...")
         # Guardar en base de datos
         receipt = Receipt.objects.create(
             supermarket_name=parsed["supermarket"] or "Desconocido",
@@ -357,43 +441,60 @@ def receipt_upload_view(request):
         print(f"Error procesando recibo: {e}")
         return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
 
+@csrf_exempt
 @require_http_methods(["GET"])
 def receipt_list_view(request):
-    """API endpoint para listar todos los recibos"""
-    receipts = Receipt.objects.all().order_by('-date')
+    """API endpoint para listar todos los recibos (optimizado)"""
+    import time
+    start_time = time.time()
+    
+    # Optimización: usar annotations para contar productos en una sola query
+    from django.db.models import Count
+    receipts = Receipt.objects.annotate(
+        products_count=Count('products')
+    ).all().order_by('-date')
     
     receipts_data = []
     for receipt in receipts:
-        products = receipt.products.all()
         receipts_data.append({
             'id': receipt.id,
             'supermarket': receipt.supermarket_name,
             'date': receipt.date.strftime('%Y-%m-%d'),
             'total': float(receipt.total_amount),
-            'products_count': products.count(),
-            'products': [
-                {
-                    'id': product.id,
-                    'name': product.name,
-                    'quantity': product.quantity,
-                    'unit_price': float(product.price),
-                    'total_price': float(product.quantity) * float(product.price)
-                }
-                for product in products
-            ]
+            'products_count': receipt.products_count,  # Usa el annotated count
+            # No incluimos la lista completa de productos aquí para optimizar
         })
     
-    return JsonResponse({
+    duration = time.time() - start_time
+    print(f"📋 receipt_list_view completado en {duration:.3f} segundos")
+    print(f"📋 Devolviendo {len(receipts_data)} recibos")
+    
+    # Debug: Mostrar los primeros recibos
+    if receipts_data:
+        print(f"📋 Primer recibo: {receipts_data[0]}")
+    else:
+        print("📋 No hay recibos en la base de datos")
+    
+    response_data = {
         'success': True,
-        'count': len(receipts_data),
+        'total_count': len(receipts_data),
         'receipts': receipts_data
-    })
+    }
+    
+    print(f"📋 Response final: {response_data}")
+    
+    return JsonResponse(response_data)
 
+@csrf_exempt
 @require_http_methods(["GET"])
 def receipt_detail_view(request, receipt_id):
-    """API endpoint para ver detalles de un recibo específico"""
+    """API endpoint para ver detalles de un recibo específico (optimizado)"""
+    import time
+    start_time = time.time()
+    
     try:
-        receipt = Receipt.objects.get(id=receipt_id)
+        # Optimización: usar prefetch_related para productos
+        receipt = Receipt.objects.prefetch_related('products').get(id=receipt_id)
         products = receipt.products.all()
         
         receipt_data = {
@@ -401,7 +502,7 @@ def receipt_detail_view(request, receipt_id):
             'supermarket': receipt.supermarket_name,
             'date': receipt.date.strftime('%Y-%m-%d'),
             'total': float(receipt.total_amount),
-            'products_count': products.count(),
+            'products_count': len(products),  # Usar len() en lugar de count() ya que están prefetched
             'products': [
                 {
                     'id': product.id,
@@ -413,6 +514,9 @@ def receipt_detail_view(request, receipt_id):
                 for product in products
             ]
         }
+        
+        duration = time.time() - start_time
+        print(f"👁️ receipt_detail_view completado en {duration:.3f} segundos")
         
         return JsonResponse({
             'success': True,

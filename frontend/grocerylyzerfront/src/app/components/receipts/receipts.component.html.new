@@ -1,7 +1,7 @@
 <div class="receipts-container">
   <div class="page-header">
-    <h1 class="page-title">{{ 'receipts.title' | translate }}</h1>
-    <p class="page-description">{{ 'receipts.description' | translate }}</p>
+    <h1 class="page-title">Recibos</h1>
+    <p class="page-description">Gestiona y analiza tus recibos de supermercado</p>
   </div>
 
   <div class="upload-area">
@@ -18,9 +18,9 @@
             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
           </svg>
           <p class="mb-2 text-sm text-gray-500">
-            <span class="font-semibold">{{ 'receipts.upload.click' | translate }}</span> {{ 'receipts.upload.dragdrop' | translate }}
+            <span class="font-semibold">Haz clic para subir</span> o arrastra y suelta
           </p>
-          <p class="text-xs text-gray-500">{{ 'receipts.upload.format' | translate }}</p>
+          <p class="text-xs text-gray-500">PDF de recibo de supermercado (MAX. 10MB)</p>
         </div>
         <input 
           id="dropzone-file" 
@@ -56,7 +56,7 @@
       <button 
         class="upload-btn"
         (click)="uploadFile()">
-        {{ 'receipts.upload.process' | translate }}
+        Procesar Recibo
       </button>
     </div>
 
@@ -66,7 +66,7 @@
         <div class="progress-bar">
           <div class="progress-fill" [style.width.%]="uploadProgress"></div>
         </div>
-        <p class="progress-text">{{ 'receipts.upload.processing' | translate }} {{ uploadProgress }}%</p>
+        <p class="progress-text">Procesando recibo... {{ uploadProgress }}%</p>
       </div>
     </div>
 
@@ -80,28 +80,38 @@
   </div>
 
   <div class="receipts-list">
-    <h2 class="list-title">{{ 'receipts.list.title' | translate }}</h2>
+    <h2 class="list-title">Lista de Recibos</h2>
+    
+    <!-- DEBUG: Estado actual -->
+    <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-family: monospace; font-size: 12px;">
+      <strong>DEBUG Estado:</strong><br>
+      isLoading: {{ isLoading }}<br>
+      hasInitialLoad: {{ hasInitialLoad }}<br>
+      initialLoadError: {{ initialLoadError }}<br>
+      receipts.length: {{ receipts.length }}<br>
+      Condición lista: {{ !isLoading && !initialLoadError && receipts.length > 0 }}
+    </div>
     
     <!-- Error de carga inicial -->
     <div *ngIf="initialLoadError && !isLoading" class="error-state">
       <div class="error-icon">⚠️</div>
-      <h3>{{ 'receipts.error.load' | translate }}</h3>
+      <h3>Error al cargar los recibos</h3>
       <p>{{ initialLoadError }}</p>
       <button class="retry-btn" (click)="retryLoadReceipts()">
-        {{ 'receipts.retry' | translate }}
+        Reintentar
       </button>
     </div>
     
     <!-- Spinner de carga inicial -->
     <div *ngIf="isLoading && !hasInitialLoad" class="loading-spinner">
       <div class="spinner"></div>
-      <p>{{ 'receipts.loading' | translate }}</p>
+      <p>Conectando con el servidor...</p>
     </div>
     
     <!-- Spinner de recarga -->
     <div *ngIf="isLoading && hasInitialLoad" class="loading-spinner">
       <div class="spinner"></div>
-      <p>{{ 'receipts.loading.update' | translate }}</p>
+      <p>Actualizando recibos...</p>
     </div>
     
     <!-- Lista de recibos -->
@@ -113,13 +123,13 @@
             <p class="receipt-date">{{ receipt.date }}</p>
           </div>
           <div class="receipt-actions">
-            <button class="view-btn" (click)="viewReceipt(receipt.id)" [title]="'receipts.card.view' | translate">
+            <button class="view-btn" (click)="viewReceipt(receipt.id)" title="Ver detalles">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
               </svg>
             </button>
-            <button class="delete-btn" (click)="deleteReceipt(receipt.id)" [title]="'receipts.card.delete' | translate">
+            <button class="delete-btn" (click)="deleteReceipt(receipt.id)" title="Eliminar">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
               </svg>
@@ -128,22 +138,30 @@
         </div>
         <div class="receipt-stats">
           <div class="stat">
-            <div class="stat-label">{{ 'receipts.card.total' | translate }}</div>
+            <div class="stat-label">Total</div>
             <div class="stat-value">${{ receipt.total.toFixed(2) }}</div>
           </div>
           <div class="stat">
-            <div class="stat-label">{{ 'receipts.card.products' | translate }}</div>
+            <div class="stat-label">Productos</div>
             <div class="stat-value">{{ receipt.products_count }}</div>
           </div>
         </div>
       </div>
     </div>
     
+    <!-- TEST: Lista de recibos SIN condiciones -->
+    <div style="border: 2px solid red; padding: 10px; margin: 10px 0;">
+      <h3>TEST - Lista incondicional:</h3>
+      <div *ngFor="let receipt of receipts" style="border: 1px solid blue; padding: 5px; margin: 5px 0;">
+        ID: {{ receipt.id }} - {{ receipt.supermarket }} - ${{ receipt.total }}
+      </div>
+    </div>
+    
     <!-- Mensaje cuando no hay recibos -->
     <div *ngIf="!isLoading && !initialLoadError && receipts.length === 0 && hasInitialLoad" class="no-receipts">
       <div class="empty-icon">📄</div>
-      <h3>{{ 'receipts.list.empty' | translate }}</h3>
-      <p>{{ 'receipts.list.empty.subtitle' | translate }}</p>
+      <h3>No hay recibos</h3>
+      <p>Sube tu primer recibo para comenzar</p>
     </div>
   </div>
 </div>
@@ -152,7 +170,7 @@
 <div *ngIf="showDetailModal" class="modal-overlay" (click)="closeDetailModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>{{ 'receipts.detail.title' | translate }}</h2>
+      <h2>Detalles del Recibo</h2>
       <button class="close-btn" (click)="closeDetailModal()">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -164,47 +182,47 @@
       <!-- Loading state -->
       <div *ngIf="isLoadingDetail" class="loading-state">
         <div class="spinner"></div>
-        <p>{{ 'receipts.detail.loading' | translate }}</p>
+        <p>Cargando detalles...</p>
       </div>
       
       <!-- Error state -->
       <div *ngIf="detailError" class="error-state">
         <div class="error-icon">❌</div>
         <p>{{ detailError }}</p>
-        <button class="retry-btn" (click)="closeDetailModal()">{{ 'receipts.detail.close' | translate }}</button>
+        <button class="retry-btn" (click)="closeDetailModal()">Cerrar</button>
       </div>
       
       <!-- Content -->
       <div *ngIf="!isLoadingDetail && !detailError && selectedReceipt" class="receipt-detail">
         <div class="receipt-info">
           <div class="info-row">
-            <span class="label">{{ 'receipts.detail.supermarket' | translate }}</span>
+            <span class="label">Supermercado:</span>
             <span class="value">{{ selectedReceipt.supermarket }}</span>
           </div>
           <div class="info-row">
-            <span class="label">{{ 'receipts.detail.date' | translate }}</span>
+            <span class="label">Fecha:</span>
             <span class="value">{{ selectedReceipt.date }}</span>
           </div>
           <div class="info-row">
-            <span class="label">{{ 'receipts.detail.total' | translate }}</span>
+            <span class="label">Total:</span>
             <span class="value total">${{ selectedReceipt.total.toFixed(2) }}</span>
           </div>
           <div class="info-row">
-            <span class="label">{{ 'receipts.detail.products' | translate }}</span>
-            <span class="value">{{ selectedReceipt.products_count }} {{ 'receipts.detail.items' | translate }}</span>
+            <span class="label">Productos:</span>
+            <span class="value">{{ selectedReceipt.products_count }} artículos</span>
           </div>
         </div>
         
         <div class="products-section">
-          <h3>{{ 'receipts.detail.products.list' | translate }}</h3>
+          <h3>Lista de Productos</h3>
           <div class="products-list">
             <div *ngFor="let product of selectedReceipt.products" class="product-item">
               <div class="product-info">
                 <span class="product-name">{{ product.name }}</span>
-                <span class="product-quantity">{{ 'receipts.detail.product.quantity' | translate }} {{ product.quantity }}</span>
+                <span class="product-quantity">Cantidad: {{ product.quantity }}</span>
               </div>
               <div class="product-prices">
-                <span class="unit-price">${{ product.unit_price.toFixed(2) }} {{ 'receipts.detail.product.unit' | translate }}</span>
+                <span class="unit-price">${{ product.unit_price.toFixed(2) }} c/u</span>
                 <span class="total-price">${{ product.total_price.toFixed(2) }}</span>
               </div>
             </div>
