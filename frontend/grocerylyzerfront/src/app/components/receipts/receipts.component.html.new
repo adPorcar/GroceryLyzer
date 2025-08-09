@@ -82,6 +82,16 @@
   <div class="receipts-list">
     <h2 class="list-title">Lista de Recibos</h2>
     
+    <!-- DEBUG: Estado actual -->
+    <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-family: monospace; font-size: 12px;">
+      <strong>DEBUG Estado:</strong><br>
+      isLoading: {{ isLoading }}<br>
+      hasInitialLoad: {{ hasInitialLoad }}<br>
+      initialLoadError: {{ initialLoadError }}<br>
+      receipts.length: {{ receipts.length }}<br>
+      Condición lista: {{ !isLoading && !initialLoadError && receipts.length > 0 }}
+    </div>
+    
     <!-- Error de carga inicial -->
     <div *ngIf="initialLoadError && !isLoading" class="error-state">
       <div class="error-icon">⚠️</div>
@@ -136,6 +146,14 @@
             <div class="stat-value">{{ receipt.products_count }}</div>
           </div>
         </div>
+      </div>
+    </div>
+    
+    <!-- TEST: Lista de recibos SIN condiciones -->
+    <div style="border: 2px solid red; padding: 10px; margin: 10px 0;">
+      <h3>TEST - Lista incondicional:</h3>
+      <div *ngFor="let receipt of receipts" style="border: 1px solid blue; padding: 5px; margin: 5px 0;">
+        ID: {{ receipt.id }} - {{ receipt.supermarket }} - ${{ receipt.total }}
       </div>
     </div>
     

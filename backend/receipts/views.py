@@ -448,9 +448,11 @@ def receipt_list_view(request):
     import time
     start_time = time.time()
     
-    # Optimización: usar prefetch_related para evitar N+1 queries
-    # Solo necesitamos contar productos, no cargar todos los datos
-    receipts = Receipt.objects.prefetch_related('products').all().order_by('-date')
+    # Optimización: usar annotations para contar productos en una sola query
+    from django.db.models import Count
+    receipts = Receipt.objects.annotate(
+        products_count=Count('products')
+    ).all().order_by('-date')
     
     receipts_data = []
     for receipt in receipts:
@@ -459,30 +461,39 @@ def receipt_list_view(request):
             'supermarket': receipt.supermarket_name,
             'date': receipt.date.strftime('%Y-%m-%d'),
             'total': float(receipt.total_amount),
-            'products_count': receipt.products.count(),
+            'products_count': receipt.products_count,  # Usa el annotated count
             # No incluimos la lista completa de productos aquí para optimizar
         })
     
     duration = time.time() - start_time
     print(f"📋 receipt_list_view completado en {duration:.3f} segundos")
+    print(f"📋 Devolviendo {len(receipts_data)} recibos")
     
-    return JsonResponse({
+    # Debug: Mostrar los primeros recibos
+    if receipts_data:
+        print(f"📋 Primer recibo: {receipts_data[0]}")
+    else:
+        print("📋 No hay recibos en la base de datos")
+    
+    response_data = {
         'success': True,
         'total_count': len(receipts_data),
         'receipts': receipts_data
-    })
+    }
+    
+    print(f"📋 Response final: {response_data}")
+    
+    return JsonResponse(response_data)
 
 @csrf_exempt
 @require_http_methods(["GET"])
-def receipt_detail_view(request, receipt_id):
-    """API endpoint para ver detalles de un recibo específico"""
 def receipt_detail_view(request, receipt_id):
     """API endpoint para ver detalles de un recibo específico (optimizado)"""
     import time
     start_time = time.time()
     
     try:
-        # Optimización: usar select_related si hay foreign keys, prefetch_related para productos
+        # Optimización: usar prefetch_related para productos
         receipt = Receipt.objects.prefetch_related('products').get(id=receipt_id)
         products = receipt.products.all()
         
@@ -491,7 +502,7 @@ def receipt_detail_view(request, receipt_id):
             'supermarket': receipt.supermarket_name,
             'date': receipt.date.strftime('%Y-%m-%d'),
             'total': float(receipt.total_amount),
-            'products_count': products.count(),
+            'products_count': len(products),  # Usar len() en lugar de count() ya que están prefetched
             'products': [
                 {
                     'id': product.id,

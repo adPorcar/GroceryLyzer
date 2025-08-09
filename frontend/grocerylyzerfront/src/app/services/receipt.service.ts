@@ -76,9 +76,9 @@ export class ReceiptService {
     
     return this.http.get<ReceiptListResponse>(`${this.apiUrl}/api/list/`, {
       ...this.getHttpOptions(),
-      // Añadir timeout de 10 segundos
+      // Añadir timeout de 3 segundos
     }).pipe(
-      timeout(10000),
+      timeout(3000),
       tap(response => {
         const duration = Date.now() - startTime;
         console.log(`✅ getReceipts completado en ${duration}ms:`, response);
@@ -99,16 +99,16 @@ export class ReceiptService {
     return this.http.get<{success: boolean, receipt: Receipt}>(`${this.apiUrl}/api/detail/${id}/`, {
       ...this.getHttpOptions(),
     }).pipe(
-      timeout(8000),
-      tap(response => {
+      timeout(5000), // 5 segundos para detalles ya que puede incluir productos
+      map(response => response.receipt),
+      tap(receipt => {
         const duration = Date.now() - startTime;
-        console.log(`✅ getReceiptDetail completado en ${duration}ms:`, response);
+        console.log(`✅ getReceiptDetail completado en ${duration}ms:`, receipt);
       }),
-      map((response: any) => response.receipt), // Extraer solo el objeto receipt
-      catchError((error: any) => {
+      catchError(error => {
         const duration = Date.now() - startTime;
         console.error(`❌ getReceiptDetail falló después de ${duration}ms:`, error);
-        return throwError(() => error);
+        throw error;
       })
     );
   }

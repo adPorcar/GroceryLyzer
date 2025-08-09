@@ -1,13 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { TranslatePipe } from '../../pipes/translate.pipe';
 import { ReceiptService, Receipt } from '../../services/receipt.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-receipts',
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule],
   templateUrl: './receipts.component.html',
   styleUrl: './receipts.component.scss'
 })
@@ -20,6 +19,8 @@ export class ReceiptsComponent implements OnInit {
   uploadMessage: string | null = null;
   receipts: Receipt[] = [];
   isLoading = false;
+  hasInitialLoad = false;
+  initialLoadError: string | null = null;
   
   // Modal de detalles
   showDetailModal = false;
@@ -30,12 +31,68 @@ export class ReceiptsComponent implements OnInit {
   constructor(
     private receiptService: ReceiptService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     console.log('ReceiptsComponent inicializado');
-    this.loadReceipts();
+    console.log('Testing backend connection...');
+    
+    this.isLoading = true;
+    
+    // Timeout de seguridad en caso de que algo falle
+    const safetyTimeout = setTimeout(() => {
+      if (this.isLoading) {
+        console.warn('⚠️ Timeout de seguridad: Forzando fin de carga');
+        this.isLoading = false;
+        this.initialLoadError = 'La carga tardó demasiado tiempo';
+        this.cdr.detectChanges();
+      }
+    }, 10000); // 10 segundos
+    
+    // Prueba básica de conectividad
+    this.receiptService.getReceipts().subscribe({
+      next: (response) => {
+        clearTimeout(safetyTimeout);
+        console.log('✅ Conexión exitosa con backend:', response);
+        this.receipts = response.receipts;
+        this.isLoading = false;
+        this.hasInitialLoad = true;
+        
+        // Forzar detección de cambios
+        this.cdr.detectChanges();
+        
+        // Debug: Mostrar estado de las variables
+        console.log('🔍 Estado después de carga inicial:');
+        console.log('- receipts.length:', this.receipts.length);
+        console.log('- isLoading:', this.isLoading);
+        console.log('- hasInitialLoad:', this.hasInitialLoad);
+        console.log('- initialLoadError:', this.initialLoadError);
+        console.log('- Condición para mostrar lista:', !this.isLoading && !this.initialLoadError && this.receipts.length > 0);
+      },
+      error: (error) => {
+        clearTimeout(safetyTimeout);
+        console.error('❌ Error conectando con backend:', error);
+        console.error('Status:', error.status);
+        console.error('Error object:', error.error);
+        this.isLoading = false;
+        
+        // Forzar detección de cambios
+        this.cdr.detectChanges();
+        
+        if (error.status === 0) {
+          this.initialLoadError = 'No se puede conectar con el servidor. ¿Está ejecutándose el backend?';
+        } else if (error.status === 401) {
+          this.authService.logout();
+          this.router.navigate(['/'], { fragment: 'login-required' });
+        } else if (error.name === 'TimeoutError') {
+          this.initialLoadError = 'La petición tardó demasiado tiempo. Inténtalo de nuevo.';
+        } else {
+          this.initialLoadError = `Error del servidor: ${error.status} - ${error.message}`;
+        }
+      }
+    });
   }
 
   onDragOver(event: DragEvent) {
@@ -102,9 +159,10 @@ export class ReceiptsComponent implements OnInit {
     this.uploadError = null;
     this.uploadMessage = null;
 
-    // Simular progreso
+    // Simular progreso con detección de cambios
     const progressInterval = setInterval(() => {
       this.uploadProgress += 10;
+      this.cdr.detectChanges(); // Forzar actualización de la UI
       if (this.uploadProgress >= 90) {
         clearInterval(progressInterval);
       }
@@ -119,17 +177,26 @@ export class ReceiptsComponent implements OnInit {
         this.uploadMessage = 'Recibo procesado exitosamente';
         this.selectedFile = null;
         
-        // Recargar la lista de recibos
+        // Forzar detección de cambios para la barra de progreso
+        this.cdr.detectChanges();
+        
+        // Recargar la lista de recibos inmediatamente
+        this.loadReceipts();
+        
+        // Limpiar mensaje después de mostrar la lista actualizada
         setTimeout(() => {
-          this.loadReceipts();
           this.uploadMessage = null;
-        }, 2000);
+          this.cdr.detectChanges();
+        }, 3000);
       },
       error: (error) => {
         console.error('Error en upload:', error);
         clearInterval(progressInterval);
         this.isUploading = false;
         this.uploadProgress = 0;
+        
+        // Forzar detección de cambios para el estado de error
+        this.cdr.detectChanges();
         
         if (error.status === 401) {
           this.authService.logout();
@@ -145,7 +212,7 @@ export class ReceiptsComponent implements OnInit {
   loadReceipts() {
     console.log('📋 Cargando recibos...');
     this.isLoading = true;
-    this.uploadError = null;
+    this.initialLoadError = null; // Limpiar errores anteriores
     
     const startTime = Date.now();
     
@@ -155,6 +222,18 @@ export class ReceiptsComponent implements OnInit {
         console.log(`✅ Recibos cargados en ${duration}ms:`, response);
         this.receipts = response.receipts;
         this.isLoading = false;
+        this.hasInitialLoad = true;
+        
+        // Forzar detección de cambios
+        this.cdr.detectChanges();
+        
+        // Debug: Mostrar estado de las variables
+        console.log('🔍 Estado después de loadReceipts:');
+        console.log('- receipts.length:', this.receipts.length);
+        console.log('- isLoading:', this.isLoading);
+        console.log('- hasInitialLoad:', this.hasInitialLoad);
+        console.log('- initialLoadError:', this.initialLoadError);
+        console.log('- Condición para mostrar lista:', !this.isLoading && !this.initialLoadError && this.receipts.length > 0);
       },
       error: (error) => {
         const duration = Date.now() - startTime;
@@ -162,17 +241,21 @@ export class ReceiptsComponent implements OnInit {
         this.isLoading = false;
         
         if (error.status === 0) {
-          this.uploadError = 'No se puede conectar con el servidor. ¿Está ejecutándose el backend?';
+          this.initialLoadError = 'No se puede conectar con el servidor. ¿Está ejecutándose el backend?';
         } else if (error.status === 401) {
           this.authService.logout();
           this.router.navigate(['/'], { fragment: 'login-required' });
         } else if (error.name === 'TimeoutError') {
-          this.uploadError = 'La petición tardó demasiado tiempo. Inténtalo de nuevo.';
+          this.initialLoadError = 'La petición tardó demasiado tiempo. Inténtalo de nuevo.';
         } else {
-          this.uploadError = `Error del servidor: ${error.status} - ${error.message}`;
+          this.initialLoadError = `Error del servidor: ${error.status} - ${error.message}`;
         }
       }
     });
+  }
+
+  retryLoadReceipts() {
+    this.loadReceipts();
   }
 
   viewReceipt(receiptId: number) {
