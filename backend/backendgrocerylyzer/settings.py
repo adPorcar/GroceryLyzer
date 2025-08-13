@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-f_y&cd=y9*9r5qv%#xtt7r703s858adthxerz)=gq=6zqm!kkn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost','grocerylyzer.vercel.app']
 
 
 # Application definition

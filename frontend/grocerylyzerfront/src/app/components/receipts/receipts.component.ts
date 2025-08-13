@@ -159,15 +159,18 @@ export class ReceiptsComponent implements OnInit {
     this.uploadProgress = 0;
     this.uploadError = null;
     this.uploadMessage = null;
+    
+    // Force initial change detection
+    this.cdr.detectChanges();
 
-    // Simular progreso con detección de cambios
+    // Simular progreso con detección de cambios más frecuente
     const progressInterval = setInterval(() => {
       this.uploadProgress += 10;
       this.cdr.detectChanges(); // Forzar actualización de la UI
       if (this.uploadProgress >= 90) {
         clearInterval(progressInterval);
       }
-    }, 200);
+    }, 150);
 
     this.receiptService.uploadReceipt(this.selectedFile).subscribe({
       next: (response) => {
@@ -178,7 +181,7 @@ export class ReceiptsComponent implements OnInit {
         this.uploadMessage = 'Recibo procesado exitosamente';
         this.selectedFile = null;
         
-        // Forzar detección de cambios para la barra de progreso
+        // Forzar detección de cambios para mostrar éxito
         this.cdr.detectChanges();
         
         // Recargar la lista de recibos inmediatamente
@@ -196,9 +199,6 @@ export class ReceiptsComponent implements OnInit {
         this.isUploading = false;
         this.uploadProgress = 0;
         
-        // Forzar detección de cambios para el estado de error
-        this.cdr.detectChanges();
-        
         if (error.status === 401) {
           this.authService.logout();
           this.router.navigate(['/'], { fragment: 'login-required' });
@@ -206,6 +206,9 @@ export class ReceiptsComponent implements OnInit {
         }
         
         this.uploadError = error.error?.message || error.message || 'Error al procesar el recibo';
+        
+        // Forzar detección de cambios para mostrar error
+        this.cdr.detectChanges();
       }
     });
   }
@@ -214,6 +217,9 @@ export class ReceiptsComponent implements OnInit {
     console.log('📋 Cargando recibos...');
     this.isLoading = true;
     this.initialLoadError = null; // Limpiar errores anteriores
+    
+    // Force initial change detection to show loading state
+    this.cdr.detectChanges();
     
     const startTime = Date.now();
     
@@ -251,6 +257,9 @@ export class ReceiptsComponent implements OnInit {
         } else {
           this.initialLoadError = `Error del servidor: ${error.status} - ${error.message}`;
         }
+        
+        // Force change detection to show error
+        this.cdr.detectChanges();
       }
     });
   }
@@ -261,9 +270,17 @@ export class ReceiptsComponent implements OnInit {
 
   viewReceipt(receiptId: number) {
     console.log(`👁️ Cargando detalles del recibo ${receiptId}...`);
-    this.isLoadingDetail = true;
+    
+    // Reset states first
+    this.selectedReceipt = null;
     this.detailError = null;
+    this.isLoadingDetail = true;
+    
+    // Show modal immediately
     this.showDetailModal = true;
+    
+    // Force initial change detection
+    this.cdr.detectChanges();
     
     const startTime = Date.now();
     
@@ -271,12 +288,24 @@ export class ReceiptsComponent implements OnInit {
       next: (receipt) => {
         const duration = Date.now() - startTime;
         console.log(`✅ Detalles del recibo cargados en ${duration}ms:`, receipt);
+        
+        // Update data
         this.selectedReceipt = receipt;
         this.isLoadingDetail = false;
+        
+        // Force change detection to update the UI immediately
+        this.cdr.detectChanges();
+        
+        console.log('🔍 Estado después de cargar detalles:');
+        console.log('- selectedReceipt:', this.selectedReceipt);
+        console.log('- isLoadingDetail:', this.isLoadingDetail);
+        console.log('- detailError:', this.detailError);
+        console.log('- showDetailModal:', this.showDetailModal);
       },
       error: (error) => {
         const duration = Date.now() - startTime;
         console.error(`❌ Error al cargar detalles después de ${duration}ms:`, error);
+        
         this.isLoadingDetail = false;
         
         if (error.status === 401) {
@@ -287,6 +316,9 @@ export class ReceiptsComponent implements OnInit {
         } else {
           this.detailError = 'Error al cargar los detalles del recibo';
         }
+        
+        // Force change detection to show error immediately
+        this.cdr.detectChanges();
       }
     });
   }
@@ -295,6 +327,10 @@ export class ReceiptsComponent implements OnInit {
     this.showDetailModal = false;
     this.selectedReceipt = null;
     this.detailError = null;
+    this.isLoadingDetail = false;
+    
+    // Force change detection to update modal state immediately
+    this.cdr.detectChanges();
   }
 
   deleteReceipt(receiptId: number) {

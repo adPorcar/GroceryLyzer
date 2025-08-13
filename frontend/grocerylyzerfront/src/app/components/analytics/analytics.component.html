@@ -1,39 +1,280 @@
-<div class="analytics-container">
-  <div class="page-header">
-    <h1 class="page-title">{{ 'nav.analytics' | translate }}</h1>
-    <p class="page-description">{{ 'analytics.description' | translate }}</p>
+<div class="analytics-dashboard">
+  <!-- Header with Filters -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1 class="dashboard-title">{{ 'nav.analytics' | translate }}</h1>
+      <p class="dashboard-description">{{ 'analytics.description' | translate }}</p>
+    </div>
+    
+    <div class="filters-section">
+      <div class="filter-group">
+        <label for="period-select">{{ 'analytics.filters.period' | translate }}</label>
+        <select id="period-select" [(ngModel)]="selectedPeriod" (change)="onFilterChange()" class="filter-select">
+          <option value="year">{{ 'analytics.filters.period.year' | translate }}</option>
+          <option value="month">{{ 'analytics.filters.period.month' | translate }}</option>
+          <option value="week">{{ 'analytics.filters.period.week' | translate }}</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="year-select">{{ 'analytics.filters.year' | translate }}</label>
+        <select id="year-select" [(ngModel)]="selectedYear" (change)="onFilterChange()" class="filter-select">
+          <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
+        </select>
+      </div>
+      
+      <div class="filter-group" *ngIf="selectedPeriod === 'month'">
+        <label for="month-select">{{ 'analytics.filters.month' | translate }}</label>
+        <select id="month-select" [(ngModel)]="selectedMonth" (change)="onFilterChange()" class="filter-select">
+          <option value="">{{ 'analytics.filters.allMonths' | translate }}</option>
+          <option value="1">{{ 'analytics.filters.january' | translate }}</option>
+          <option value="2">{{ 'analytics.filters.february' | translate }}</option>
+          <option value="3">{{ 'analytics.filters.march' | translate }}</option>
+          <option value="4">{{ 'analytics.filters.april' | translate }}</option>
+          <option value="5">{{ 'analytics.filters.may' | translate }}</option>
+          <option value="6">{{ 'analytics.filters.june' | translate }}</option>
+          <option value="7">{{ 'analytics.filters.july' | translate }}</option>
+          <option value="8">{{ 'analytics.filters.august' | translate }}</option>
+          <option value="9">{{ 'analytics.filters.september' | translate }}</option>
+          <option value="10">{{ 'analytics.filters.october' | translate }}</option>
+          <option value="11">{{ 'analytics.filters.november' | translate }}</option>
+          <option value="12">{{ 'analytics.filters.december' | translate }}</option>
+        </select>
+      </div>
+    </div>
   </div>
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon">💰</div>
-      <div class="stat-value">$0</div>
-      <div class="stat-label">{{ 'analytics.total.spent' | translate }}</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon">📄</div>
-      <div class="stat-value">0</div>
-      <div class="stat-label">{{ 'analytics.total.receipts' | translate }}</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon">🛒</div>
-      <div class="stat-value">0</div>
-      <div class="stat-label">{{ 'analytics.total.items' | translate }}</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon">📊</div>
-      <div class="stat-value">$0</div>
-      <div class="stat-label">{{ 'analytics.average.monthly' | translate }}</div>
+  <!-- Overview Stats Cards -->
+  <div class="stats-section" *ngIf="dashboardData && !isLoading.overview">
+    <div class="stats-grid">
+      <div class="stat-card total-spent">
+        <div class="stat-icon">💰</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ formatCurrency(dashboardData?.overview?.total_spent || 0) }}</div>
+          <div class="stat-label">{{ 'analytics.stats.totalSpent' | translate }}</div>
+        </div>
+      </div>
+      
+      <div class="stat-card total-receipts">
+        <div class="stat-icon">📄</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ dashboardData?.overview?.total_receipts || 0 }}</div>
+          <div class="stat-label">{{ 'analytics.stats.receiptsAnalyzed' | translate }}</div>
+        </div>
+      </div>
+      
+      <div class="stat-card total-products">
+        <div class="stat-icon">🛍️</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ dashboardData?.overview?.total_products || 0 }}</div>
+          <div class="stat-label">{{ 'analytics.stats.productsPurchased' | translate }}</div>
+        </div>
+      </div>
+      
+      <div class="stat-card avg-receipt">
+        <div class="stat-icon">📊</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ formatCurrency(dashboardData?.overview?.avg_receipt || 0) }}</div>
+          <div class="stat-label">{{ 'analytics.stats.avgPerReceipt' | translate }}</div>
+        </div>
+      </div>
+      
+      <div class="stat-card supermarkets">
+        <div class="stat-icon">🏪</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ dashboardData?.overview?.unique_supermarkets || 0 }}</div>
+          <div class="stat-label">{{ 'analytics.stats.supermarketsVisited' | translate }}</div>
+        </div>
+      </div>
+      
+      <div class="stat-card days-analyzed">
+        <div class="stat-icon">⏰</div>
+        <div class="stat-content">
+          <div class="stat-value">{{ dashboardData?.overview?.days_analyzed || 0 }}</div>
+          <div class="stat-label">{{ 'analytics.stats.daysAnalyzed' | translate }}</div>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- Loading State for Overview -->
+  <div class="loading-section" *ngIf="isLoading.overview">
+    <div class="loading-spinner">{{ 'analytics.loading.general' | translate }}</div>
+  </div>
+
+  <!-- No Data State -->
+  <div class="no-data-section" *ngIf="!isLoading.overview && !dashboardData">
+    <div class="no-data-message">
+      <h3>{{ 'analytics.noData.title' | translate }}</h3>
+      <p>{{ 'analytics.noData.message' | translate }}</p>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
   <div class="charts-section">
-    <h2 class="section-title">{{ 'analytics.charts.title' | translate }}</h2>
-    <div class="no-data">
-      {{ 'analytics.charts.nodata' | translate }}
+    <!-- Monthly Comparison Chart -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <h3 class="chart-title">{{ 'analytics.charts.monthlyComparison' | translate }}</h3>
+        <div class="chart-insights" *ngIf="monthlyData?.insights">
+          <div class="insight best-month" *ngIf="monthlyData?.insights?.best_month">
+            <span class="insight-icon">🏆</span>
+            <span class="insight-text">
+              {{ 'analytics.charts.bestMonth' | translate }} {{ monthlyData?.insights?.best_month?.month_name }} 
+              ({{ monthlyData?.insights?.best_month ? formatCurrency(monthlyData?.insights?.best_month?.total_spent) : '' }})
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="chart-content">
+        <canvas #monthlyChart *ngIf="!isLoading.monthly && monthlyData" width="400" height="200" style="min-height: 200px;"></canvas>
+        <div class="loading-chart" *ngIf="isLoading.monthly">{{ 'analytics.loading.monthly' | translate }}</div>
+        <div class="no-data-chart" *ngIf="!isLoading.monthly && !monthlyData">{{ 'analytics.noData.monthly' | translate }}</div>
+      </div>
+    </div>
+
+    <!-- Supermarket Distribution Chart -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <h3 class="chart-title">{{ 'analytics.charts.supermarketDistribution' | translate }}</h3>
+      </div>
+      <div class="chart-content">
+        <canvas #supermarketChart *ngIf="!isLoading.overview && dashboardData" width="400" height="200" style="min-height: 200px;"></canvas>
+        <div class="loading-chart" *ngIf="isLoading.overview">{{ 'analytics.loading.supermarkets' | translate }}</div>
+        <div class="no-data-chart" *ngIf="!isLoading.overview && !dashboardData">{{ 'analytics.noData.supermarkets' | translate }}</div>
+      </div>
+    </div>
+
+    <!-- Price Trends Chart -->
+    <div class="chart-container full-width">
+      <div class="chart-header">
+        <h3 class="chart-title">{{ 'analytics.charts.priceTrends' | translate }}</h3>
+        <div class="trends-summary" *ngIf="priceData?.price_trends">
+          <div class="trend-item" *ngFor="let trend of priceData?.price_trends">
+            <span class="product-name">{{ trend.product_name }}</span>
+            <span class="trend-indicator" [class]="getTrendClass(trend.trend_direction)">
+              {{ getTrendIcon(trend.trend_direction) }} {{ trend.trend_percentage }}%
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Individual charts for each product -->
+      <div class="individual-trends" *ngIf="priceData?.price_trends && (priceData?.price_trends?.length || 0) > 0">
+        <div class="product-trend-chart" *ngFor="let product of priceData?.price_trends; let i = index">
+          <div class="product-chart-header">
+            <h4>{{ product.product_name }}</h4>
+            <div class="product-stats">
+              <span class="trend-badge" [class]="getTrendClass(product.trend_direction)">
+                {{ getTrendIcon(product.trend_direction) }} {{ product.trend_percentage }}%
+              </span>
+              <span class="total-spent">{{ 'analytics.insights.totalSpent' | translate }} {{ formatCurrency(product.total_spent) }}</span>
+            </div>
+          </div>
+          <div class="chart-content">
+            <canvas [id]="'productChart-' + i" 
+                    width="400" 
+                    height="200" 
+                    style="min-height: 200px;">
+            </canvas>
+          </div>
+        </div>
+      </div>
+      
+      <div class="loading-chart" *ngIf="isLoading.trends">{{ 'analytics.loading.trends' | translate }}</div>
+      <div class="no-data-chart" *ngIf="!isLoading.trends && !priceData">{{ 'analytics.noData.trends' | translate }}</div>
+    </div>
+
+    <!-- Savings Potential Chart -->
+    <div class="chart-container full-width">
+      <div class="chart-header">
+        <h3 class="chart-title">{{ 'analytics.charts.savingsPotential' | translate }}</h3>
+        <div class="savings-summary" *ngIf="savingsData?.total_potential_saving">
+          <div class="total-savings">
+            <span class="savings-icon">💰</span>
+            <span class="savings-text">
+              {{ 'analytics.insights.totalPotentialSaving' | translate }} {{ savingsData && savingsData.total_potential_saving ? formatCurrency(savingsData.total_potential_saving) : '€0.00' }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="chart-content">
+        <canvas #savingsChart *ngIf="!isLoading.savings && savingsData" width="800" height="300" style="min-height: 300px;"></canvas>
+        <div class="loading-chart" *ngIf="isLoading.savings">{{ 'analytics.loading.savings' | translate }}</div>
+        <div class="no-data-chart" *ngIf="!isLoading.savings && !savingsData">{{ 'analytics.noData.savings' | translate }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Products Section -->
+  <div class="insights-section" *ngIf="dashboardData?.top_products && !isLoading.overview">
+    <h3 class="section-title">{{ 'analytics.insights.topProducts' | translate }}</h3>
+    <div class="products-grid">
+      <div class="product-card" *ngFor="let product of dashboardData?.top_products; let i = index">
+        <div class="product-rank">{{ i + 1 }}</div>
+        <div class="product-info">
+          <h4 class="product-name">{{ product.name }}</h4>
+          <div class="product-stats">
+            <div class="stat">
+              <span class="stat-label">{{ 'analytics.insights.totalSpent' | translate }}</span>
+              <span class="stat-value">{{ formatCurrency(product.total_spent) }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">{{ 'analytics.insights.totalQuantity' | translate }}</span>
+              <span class="stat-value">{{ product.total_quantity }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">{{ 'analytics.insights.avgPrice' | translate }}</span>
+              <span class="stat-value">{{ formatCurrency(product.avg_price) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Savings Analysis Section -->
+  <div class="savings-section" *ngIf="savingsData?.savings_analysis && !isLoading.savings">
+    <h3 class="section-title">{{ 'analytics.insights.savingsAnalysis' | translate }}</h3>
+    <div class="savings-list">
+      <div class="savings-item" *ngFor="let saving of savingsData?.savings_analysis?.slice(0, 5)">
+        <div class="saving-product">
+          <h4 class="saving-product-name">{{ saving.product_name }}</h4>
+          <div class="saving-details">
+            <div class="cheapest">
+              <span class="label">{{ 'analytics.insights.cheapestAt' | translate }}</span>
+              <span class="supermarket">{{ saving.cheapest_supermarket.name }}</span>
+              <span class="price">{{ formatCurrency(saving.cheapest_supermarket.avg_price) }}</span>
+            </div>
+            <div class="expensive">
+              <span class="label">{{ 'analytics.insights.expensiveAt' | translate }}</span>
+              <span class="supermarket">{{ saving.most_expensive_supermarket.name }}</span>
+              <span class="price">{{ formatCurrency(saving.most_expensive_supermarket.avg_price) }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="saving-amount">
+          <div class="potential-saving">{{ formatCurrency(saving.potential_saving) }}</div>
+          <div class="saving-percentage">{{ saving.saving_percentage }}% {{ 'analytics.insights.savingPercentage' | translate }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Period Info -->
+  <div class="period-info" *ngIf="dashboardData?.overview && !isLoading.overview">
+    <div class="period-card">
+      <h4>{{ 'analytics.period.title' | translate }}</h4>
+      <div class="period-details">
+        <div class="period-item" *ngIf="dashboardData?.overview?.first_receipt">
+          <span class="label">{{ 'analytics.period.firstReceipt' | translate }}</span>
+          <span class="value">{{ dashboardData?.overview?.first_receipt ? formatDate(dashboardData?.overview?.first_receipt!) : '' }}</span>
+        </div>
+        <div class="period-item" *ngIf="dashboardData?.overview?.last_receipt">
+          <span class="label">{{ 'analytics.period.lastReceipt' | translate }}</span>
+          <span class="value">{{ dashboardData?.overview?.last_receipt ? formatDate(dashboardData?.overview?.last_receipt!) : '' }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>

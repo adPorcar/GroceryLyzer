@@ -79,6 +79,80 @@ export class TranslationService {
       
       // Analytics
       'analytics.description': 'Analiza tus patrones de gasto y encuentra oportunidades de ahorro',
+      
+      // Analytics Filters
+      'analytics.filters.period': 'Período:',
+      'analytics.filters.period.year': 'Año',
+      'analytics.filters.period.month': 'Mes',
+      'analytics.filters.period.week': 'Semana',
+      'analytics.filters.year': 'Año:',
+      'analytics.filters.month': 'Mes:',
+      'analytics.filters.allMonths': 'Todos los meses',
+      'analytics.filters.january': 'Enero',
+      'analytics.filters.february': 'Febrero',
+      'analytics.filters.march': 'Marzo',
+      'analytics.filters.april': 'Abril',
+      'analytics.filters.may': 'Mayo',
+      'analytics.filters.june': 'Junio',
+      'analytics.filters.july': 'Julio',
+      'analytics.filters.august': 'Agosto',
+      'analytics.filters.september': 'Septiembre',
+      'analytics.filters.october': 'Octubre',
+      'analytics.filters.november': 'Noviembre',
+      'analytics.filters.december': 'Diciembre',
+      
+      // Analytics Stats Cards
+      'analytics.stats.totalSpent': 'Total Gastado',
+      'analytics.stats.receiptsAnalyzed': 'Recibos Analizados',
+      'analytics.stats.productsPurchased': 'Productos Comprados',
+      'analytics.stats.avgPerReceipt': 'Promedio por Recibo',
+      'analytics.stats.supermarketsVisited': 'Supermercados Visitados',
+      'analytics.stats.daysAnalyzed': 'Días Analizados',
+      
+      // Analytics Loading & No Data
+      'analytics.loading.general': 'Cargando datos generales...',
+      'analytics.loading.monthly': 'Cargando gráfico mensual...',
+      'analytics.loading.supermarkets': 'Cargando gráfico de supermercados...',
+      'analytics.loading.trends': 'Cargando tendencias de precio...',
+      'analytics.loading.savings': 'Cargando análisis de ahorros...',
+      'analytics.noData.title': 'No hay datos disponibles',
+      'analytics.noData.message': 'Aún no hay recibos analizados para mostrar estadísticas. Sube algunos recibos primero.',
+      'analytics.noData.monthly': 'No hay datos mensuales disponibles',
+      'analytics.noData.supermarkets': 'No hay datos de supermercados disponibles',
+      'analytics.noData.trends': 'No hay datos de tendencias disponibles',
+      'analytics.noData.savings': 'No hay datos de ahorros disponibles',
+      
+      // Analytics Charts
+      'analytics.charts.monthlyComparison': 'Comparación Mensual',
+      'analytics.charts.monthlyComparison.title': 'Comparación Mensual',
+      'analytics.charts.bestMonth': 'Mejor mes:',
+      'analytics.charts.supermarketDistribution': 'Distribución por Supermercado',
+      'analytics.charts.supermarketDistribution.title': 'Gasto por Supermercado',
+      'analytics.charts.priceTrends': 'Tendencias de Precio - Top 3 Productos',
+      'analytics.charts.savingsPotential': 'Potencial de Ahorro por Producto',
+      'analytics.charts.savingsPotential.title': 'Top 5 Productos con Mayor Ahorro Potencial',
+      'analytics.charts.totalSpentLabel': 'Gasto Total (€)',
+      'analytics.charts.priceLabel': 'Precio (€)',
+      'analytics.charts.purchaseHistory': 'Historial de compras',
+      'analytics.charts.purchaseNumber': 'Compra',
+      'analytics.charts.savingsPotentialLabel': 'Ahorro Potencial (€)',
+      
+      // Analytics Insights
+      'analytics.insights.topProducts': 'Top 3 Productos Más Comprados',
+      'analytics.insights.totalSpent': 'Total gastado:',
+      'analytics.insights.totalQuantity': 'Cantidad total:',
+      'analytics.insights.avgPrice': 'Precio promedio:',
+      'analytics.insights.savingsAnalysis': 'Análisis de Ahorros entre Supermercados',
+      'analytics.insights.cheapestAt': 'Más barato en:',
+      'analytics.insights.expensiveAt': 'Más caro en:',
+      'analytics.insights.savingPercentage': 'ahorro',
+      'analytics.insights.totalPotentialSaving': 'Ahorro total potencial:',
+      
+      // Analytics Period Info
+      'analytics.period.title': 'Período de Análisis',
+      'analytics.period.firstReceipt': 'Primer recibo:',
+      'analytics.period.lastReceipt': 'Último recibo:',
+      
       'analytics.total.spent': 'Total Gastado',
       'analytics.total.receipts': 'Total Recibos',
       'analytics.total.items': 'Total Productos',
@@ -245,6 +319,80 @@ export class TranslationService {
       
       // Analytics
       'analytics.description': 'Analyze your spending patterns and find saving opportunities',
+      
+      // Analytics Filters
+      'analytics.filters.period': 'Period:',
+      'analytics.filters.period.year': 'Year',
+      'analytics.filters.period.month': 'Month',
+      'analytics.filters.period.week': 'Week',
+      'analytics.filters.year': 'Year:',
+      'analytics.filters.month': 'Month:',
+      'analytics.filters.allMonths': 'All months',
+      'analytics.filters.january': 'January',
+      'analytics.filters.february': 'February',
+      'analytics.filters.march': 'March',
+      'analytics.filters.april': 'April',
+      'analytics.filters.may': 'May',
+      'analytics.filters.june': 'June',
+      'analytics.filters.july': 'July',
+      'analytics.filters.august': 'August',
+      'analytics.filters.september': 'September',
+      'analytics.filters.october': 'October',
+      'analytics.filters.november': 'November',
+      'analytics.filters.december': 'December',
+      
+      // Analytics Stats Cards
+      'analytics.stats.totalSpent': 'Total Spent',
+      'analytics.stats.receiptsAnalyzed': 'Receipts Analyzed',
+      'analytics.stats.productsPurchased': 'Products Purchased',
+      'analytics.stats.avgPerReceipt': 'Average per Receipt',
+      'analytics.stats.supermarketsVisited': 'Supermarkets Visited',
+      'analytics.stats.daysAnalyzed': 'Days Analyzed',
+      
+      // Analytics Loading & No Data
+      'analytics.loading.general': 'Loading general data...',
+      'analytics.loading.monthly': 'Loading monthly chart...',
+      'analytics.loading.supermarkets': 'Loading supermarkets chart...',
+      'analytics.loading.trends': 'Loading price trends...',
+      'analytics.loading.savings': 'Loading savings analysis...',
+      'analytics.noData.title': 'No data available',
+      'analytics.noData.message': 'No receipts analyzed yet to show statistics. Upload some receipts first.',
+      'analytics.noData.monthly': 'No monthly data available',
+      'analytics.noData.supermarkets': 'No supermarket data available',
+      'analytics.noData.trends': 'No trend data available',
+      'analytics.noData.savings': 'No savings data available',
+      
+      // Analytics Charts
+      'analytics.charts.monthlyComparison': 'Monthly Comparison',
+      'analytics.charts.monthlyComparison.title': 'Monthly Comparison',
+      'analytics.charts.bestMonth': 'Best month:',
+      'analytics.charts.supermarketDistribution': 'Supermarket Distribution',
+      'analytics.charts.supermarketDistribution.title': 'Spending by Supermarket',
+      'analytics.charts.priceTrends': 'Price Trends - Top 3 Products',
+      'analytics.charts.savingsPotential': 'Savings Potential by Product',
+      'analytics.charts.savingsPotential.title': 'Top 5 Products with Highest Savings Potential',
+      'analytics.charts.totalSpentLabel': 'Total Spent (€)',
+      'analytics.charts.priceLabel': 'Price (€)',
+      'analytics.charts.purchaseHistory': 'Purchase history',
+      'analytics.charts.purchaseNumber': 'Purchase',
+      'analytics.charts.savingsPotentialLabel': 'Savings Potential (€)',
+      
+      // Analytics Insights
+      'analytics.insights.topProducts': 'Top 3 Most Purchased Products',
+      'analytics.insights.totalSpent': 'Total spent:',
+      'analytics.insights.totalQuantity': 'Total quantity:',
+      'analytics.insights.avgPrice': 'Average price:',
+      'analytics.insights.savingsAnalysis': 'Savings Analysis Between Supermarkets',
+      'analytics.insights.cheapestAt': 'Cheapest at:',
+      'analytics.insights.expensiveAt': 'Most expensive at:',
+      'analytics.insights.savingPercentage': 'savings',
+      'analytics.insights.totalPotentialSaving': 'Total potential saving:',
+      
+      // Analytics Period Info
+      'analytics.period.title': 'Analysis Period',
+      'analytics.period.firstReceipt': 'First receipt:',
+      'analytics.period.lastReceipt': 'Last receipt:',
+      
       'analytics.total.spent': 'Total Spent',
       'analytics.total.receipts': 'Total Receipts',
       'analytics.total.items': 'Total Items',
