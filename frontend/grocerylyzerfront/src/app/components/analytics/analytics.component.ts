@@ -256,7 +256,7 @@ export class AnalyticsComponent implements OnInit, AfterViewInit {
             y: {
               beginAtZero: true,
               ticks: {
-                callback: function(value) {
+                callback: function(value: any) {
                   return '€' + value;
                 }
               }
@@ -358,7 +358,7 @@ export class AnalyticsComponent implements OnInit, AfterViewInit {
               text: this.translationService.translate('analytics.charts.priceLabel')
             },
             ticks: {
-              callback: function(value) {
+              callback: function(value: any) {
                 return '€' + value;
               }
             }
@@ -495,7 +495,7 @@ export class AnalyticsComponent implements OnInit, AfterViewInit {
             x: {
               beginAtZero: true,
               ticks: {
-                callback: function(value) {
+                callback: function(value: any) {
                   return '€' + value;
                 }
               }
