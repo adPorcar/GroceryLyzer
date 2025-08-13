@@ -1,9 +1,11 @@
-import { Component, OnInit, AfterViewInit, AfterViewChecked, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
 import { TranslatePipe } from '../../pipes/translate.pipe';
 import { AnalyticsService, DashboardOverview, MonthlyComparison, PriceTrends, SupermarketSavings } from '../../services/analytics.service';
+import { TranslationService } from '../../services/translation.service';
+import { forkJoin } from 'rxjs';
 
 Chart.register(...registerables);
 
@@ -13,7 +15,7 @@ Chart.register(...registerables);
   templateUrl: './analytics.component.html',
   styleUrl: './analytics.component.scss'
 })
-export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewChecked {
+export class AnalyticsComponent implements OnInit, AfterViewInit {
   @ViewChild('monthlyChart') monthlyChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('supermarketChart') supermarketChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('savingsChart') savingsChartRef!: ElementRef<HTMLCanvasElement>;
@@ -31,7 +33,8 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewCheck
   savingsData: SupermarketSavings | null = null;
 
   // Control flags for chart creation
-  productChartsCreated = false;
+  viewInitialized = false;
+  dataLoaded = false;
 
   // Filters
   selectedYear: string = new Date().getFullYear().toString();
@@ -49,7 +52,11 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewCheck
     savings: false
   };
 
-  constructor(private analyticsService: AnalyticsService) {
+  constructor(
+    private analyticsService: AnalyticsService,
+    private cdr: ChangeDetectorRef,
+    private translationService: TranslationService
+  ) {
     // Generate available years (current year and 5 years back)
     const currentYear = new Date().getFullYear();
     for (let i = 0; i <= 5; i++) {
@@ -62,137 +69,113 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewCheck
   }
 
   ngAfterViewInit() {
-    // Give a moment for the DOM to be ready then try to create charts if data is available
+    this.viewInitialized = true;
+    this.cdr.detectChanges();
+    
+    // Try to create charts if data is already loaded
+    if (this.dataLoaded) {
+      this.createAllCharts();
+    }
+  }
+
+  private createAllCharts() {
+    if (!this.viewInitialized || !this.dataLoaded) return;
+    
+    // Wait a bit for the DOM to be completely ready
     setTimeout(() => {
-      this.tryCreateAllCharts();
-    }, 500);
-  }
-
-  ngAfterViewChecked() {
-    // Try to create individual product charts if data is available and charts haven't been created yet
-    if (this.priceData?.price_trends && !this.productChartsCreated) {
-      setTimeout(() => {
+      if (this.dashboardData) {
+        this.createSupermarketChart();
+      }
+      if (this.monthlyData) {
+        this.createMonthlyChart();
+      }
+      if (this.priceData) {
         this.createTrendsChart();
-      }, 100);
-    }
-    
-    // Also try to create other charts if they haven't been created yet
-    if (this.dashboardData && !this.supermarketChart) {
-      setTimeout(() => this.createSupermarketChart(), 100);
-    }
-    
-    if (this.monthlyData && !this.monthlyChart) {
-      setTimeout(() => this.createMonthlyChart(), 100);
-    }
-    
-    if (this.savingsData && !this.savingsChart) {
-      setTimeout(() => this.createSavingsChart(), 100);
-    }
-  }
-
-  tryCreateAllCharts() {
-    if (this.dashboardData) {
-      this.createSupermarketChart();
-    }
-    if (this.monthlyData) {
-      this.createMonthlyChart();
-    }
-    if (this.priceData) {
-      this.createTrendsChart();
-    }
-    if (this.savingsData) {
-      this.createSavingsChart();
-    }
+      }
+      if (this.savingsData) {
+        this.createSavingsChart();
+      }
+      this.cdr.detectChanges();
+    }, 300); // Increased timeout for better reliability
   }
 
   loadDashboardData() {
-    this.loadOverview();
-    this.loadMonthlyComparison();
-    this.loadPriceTrends();
-    this.loadSupermarketSavings();
-  }
+    // Set all loading states to true
+    this.isLoading = {
+      overview: true,
+      monthly: true,
+      trends: true,
+      savings: true
+    };
 
-  loadOverview() {
-    this.isLoading.overview = true;
     const year = this.selectedPeriod === 'year' ? this.selectedYear : undefined;
     const month = this.selectedPeriod === 'month' ? this.selectedMonth : undefined;
 
-    this.analyticsService.getDashboardOverview(year, month).subscribe({
-      next: (data) => {
-        this.dashboardData = data;
-        this.isLoading.overview = false;
-        console.log('Dashboard data loaded:', data);
-        // Don't call createSupermarketChart here, let ngAfterViewChecked handle it
+    // Load all data simultaneously using forkJoin
+    forkJoin({
+      overview: this.analyticsService.getDashboardOverview(year, month),
+      monthly: this.analyticsService.getMonthlyComparison(this.selectedYear),
+      trends: this.analyticsService.getPriceTrends(year, month),
+      savings: this.analyticsService.getSupermarketSavings(year, month)
+    }).subscribe({
+      next: (results) => {
+        this.dashboardData = results.overview;
+        this.monthlyData = results.monthly;
+        this.priceData = results.trends;
+        this.savingsData = results.savings;
+        
+        // Set all loading states to false
+        this.isLoading = {
+          overview: false,
+          monthly: false,
+          trends: false,
+          savings: false
+        };
+
+        this.dataLoaded = true;
+        this.cdr.detectChanges();
+
+        // Create charts if view is already initialized
+        if (this.viewInitialized) {
+          this.createAllCharts();
+        }
+
+        console.log('All analytics data loaded successfully');
       },
       error: (error) => {
-        console.error('Error loading overview:', error);
+        console.error('Error loading analytics data:', error);
+        
+        // Set all loading states to false on error
+        this.isLoading = {
+          overview: false,
+          monthly: false,
+          trends: false,
+          savings: false
+        };
+        
+        // Reset data
         this.dashboardData = null;
-        this.isLoading.overview = false;
-      }
-    });
-  }
-
-  loadMonthlyComparison() {
-    this.isLoading.monthly = true;
-    this.analyticsService.getMonthlyComparison(this.selectedYear).subscribe({
-      next: (data) => {
-        this.monthlyData = data;
-        this.isLoading.monthly = false;
-        console.log('Monthly data loaded:', data);
-        // Don't call createMonthlyChart here, let ngAfterViewChecked handle it
-      },
-      error: (error) => {
-        console.error('Error loading monthly data:', error);
         this.monthlyData = null;
-        this.isLoading.monthly = false;
-      }
-    });
-  }
-
-  loadPriceTrends() {
-    this.isLoading.trends = true;
-    this.productChartsCreated = false; // Reset flag when loading new data
-    const year = this.selectedPeriod === 'year' ? this.selectedYear : undefined;
-    const month = this.selectedPeriod === 'month' ? this.selectedMonth : undefined;
-
-    this.analyticsService.getPriceTrends(year, month).subscribe({
-      next: (data) => {
-        this.priceData = data;
-        this.isLoading.trends = false;
-        // Don't call createTrendsChart here, let ngAfterViewChecked handle it
-        console.log('Price trends data loaded:', data);
-      },
-      error: (error) => {
-        console.error('Error loading price trends:', error);
         this.priceData = null;
-        this.isLoading.trends = false;
-      }
-    });
-  }
-
-  loadSupermarketSavings() {
-    this.isLoading.savings = true;
-    const year = this.selectedPeriod === 'year' ? this.selectedYear : undefined;
-    const month = this.selectedPeriod === 'month' ? this.selectedMonth : undefined;
-
-    this.analyticsService.getSupermarketSavings(year, month).subscribe({
-      next: (data) => {
-        this.savingsData = data;
-        this.isLoading.savings = false;
-        console.log('Savings data loaded:', data);
-        // Don't call createSavingsChart here, let ngAfterViewChecked handle it
-      },
-      error: (error) => {
-        console.error('Error loading savings data:', error);
         this.savingsData = null;
-        this.isLoading.savings = false;
+        
+        this.cdr.detectChanges();
       }
     });
   }
 
   onFilterChange() {
-    this.productChartsCreated = false; // Reset flag when filters change
+    // Reset data loaded flag
+    this.dataLoaded = false;
+    
     // Destroy existing charts when filters change
+    this.destroyAllCharts();
+    
+    // Reload data with new filters
+    this.loadDashboardData();
+  }
+
+  private destroyAllCharts() {
     if (this.monthlyChart) {
       this.monthlyChart.destroy();
       this.monthlyChart = null;
@@ -209,8 +192,6 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewCheck
       if (chart) chart.destroy();
     });
     this.productTrendCharts = [];
-    
-    this.loadDashboardData();
   }
 
   createMonthlyChart() {
@@ -219,8 +200,8 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewCheck
       return;
     }
     
-    if (!this.monthlyChartRef) {
-      console.log('Monthly chart ref not available, will retry...');
+    if (!this.monthlyChartRef?.nativeElement) {
+      console.log('Monthly chart ref not available');
       return;
     }
 
@@ -229,59 +210,63 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewCheck
       return;
     }
 
-    const ctx = this.monthlyChartRef.nativeElement.getContext('2d');
-    if (!ctx) {
-      console.log('Cannot get canvas context for monthly chart');
-      return;
-    }
+    try {
+      const ctx = this.monthlyChartRef.nativeElement.getContext('2d');
+      if (!ctx) {
+        console.log('Cannot get canvas context for monthly chart');
+        return;
+      }
 
-    const data = this.monthlyData.monthly_data;
-    console.log('Creating monthly chart with data:', data);
-    
-    this.monthlyChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: data.map(d => d.month_name),
-        datasets: [{
-          label: 'Gasto Total (€)',
-          data: data.map(d => d.total_spent),
-          backgroundColor: [
-            '#3B82F6', '#06B6D4', '#10B981', '#84CC16', 
-            '#EAB308', '#F59E0B', '#EF4444', '#EC4899',
-            '#8B5CF6', '#6366F1', '#14B8A6', '#F97316'
-          ],
-          borderColor: [
-            '#2563EB', '#0891B2', '#059669', '#65A30D',
-            '#CA8A04', '#D97706', '#DC2626', '#DB2777',
-            '#7C3AED', '#4F46E5', '#0D9488', '#EA580C'
-          ],
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false
-          },
-          title: {
-            display: true,
-            text: `Comparación Mensual ${this.selectedYear}`
-          }
+      const data = this.monthlyData.monthly_data;
+      console.log('Creating monthly chart with data:', data);
+      
+      this.monthlyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.map(d => d.month_name),
+          datasets: [{
+            label: this.translationService.translate('analytics.charts.totalSpentLabel'),
+            data: data.map(d => d.total_spent),
+            backgroundColor: [
+              '#3B82F6', '#06B6D4', '#10B981', '#84CC16', 
+              '#EAB308', '#F59E0B', '#EF4444', '#EC4899',
+              '#8B5CF6', '#6366F1', '#14B8A6', '#F97316'
+            ],
+            borderColor: [
+              '#2563EB', '#0891B2', '#059669', '#65A30D',
+              '#CA8A04', '#D97706', '#DC2626', '#DB2777',
+              '#7C3AED', '#4F46E5', '#0D9488', '#EA580C'
+            ],
+            borderWidth: 1
+          }]
         },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: function(value) {
-                return '€' + value;
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            title: {
+              display: true,
+              text: `${this.translationService.translate('analytics.charts.monthlyComparison.title')} ${this.selectedYear}`
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '€' + value;
+                }
               }
             }
           }
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.error('Error creating monthly chart:', error);
+    }
   }
 
   createTrendsChart() {
@@ -290,20 +275,13 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewCheck
       return;
     }
 
-    if (this.productChartsCreated) {
+    // Check if charts already exist for this data
+    if (this.productTrendCharts.length > 0) {
       console.log('Product charts already created');
       return;
     }
 
     console.log('Creating individual product trend charts with data:', this.priceData.price_trends);
-
-    // Destroy existing charts
-    this.productTrendCharts.forEach(chart => {
-      if (chart) {
-        chart.destroy();
-      }
-    });
-    this.productTrendCharts = [];
 
     // Create individual charts for each product
     this.priceData.price_trends.forEach((product, index) => {
@@ -311,8 +289,6 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewCheck
         this.createIndividualProductChart(product, index);
       }, 200 + (100 * index)); // Increase delay and stagger creation
     });
-
-    this.productChartsCreated = true;
   }
 
   createIndividualProductChart(product: any, index: number) {
@@ -347,9 +323,9 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewCheck
     const chart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: product.price_history.map((h: any, i: number) => `Compra ${i + 1}`),
+        labels: product.price_history.map((h: any, i: number) => `${this.translationService.translate('analytics.charts.purchaseNumber')} ${i + 1}`),
         datasets: [{
-          label: 'Precio (€)',
+          label: this.translationService.translate('analytics.charts.priceLabel'),
           data: product.price_history.map((h: any) => h.price),
           borderColor: color,
           backgroundColor: color + '20',
@@ -372,14 +348,14 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewCheck
           x: {
             title: {
               display: true,
-              text: 'Historial de compras'
+              text: this.translationService.translate('analytics.charts.purchaseHistory')
             }
           },
           y: {
             beginAtZero: false,
             title: {
               display: true,
-              text: 'Precio (€)'
+              text: this.translationService.translate('analytics.charts.priceLabel')
             },
             ticks: {
               callback: function(value) {
@@ -404,8 +380,8 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewCheck
       return;
     }
     
-    if (!this.supermarketChartRef) {
-      console.log('Supermarket chart ref not available, will retry...');
+    if (!this.supermarketChartRef?.nativeElement) {
+      console.log('Supermarket chart ref not available');
       return;
     }
 
@@ -414,43 +390,54 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewCheck
       return;
     }
 
-    const ctx = this.supermarketChartRef.nativeElement.getContext('2d');
-    if (!ctx) {
-      console.log('Cannot get canvas context for supermarket chart');
-      return;
-    }
+    try {
+      const ctx = this.supermarketChartRef.nativeElement.getContext('2d');
+      if (!ctx) {
+        console.log('Cannot get canvas context for supermarket chart');
+        return;
+      }
 
-    const data = this.dashboardData.supermarket_spending;
-    console.log('Creating supermarket chart with data:', data);
+      const data = this.dashboardData.supermarket_spending;
+      console.log('Creating supermarket chart with data:', data);
 
-    this.supermarketChart = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: data.map(s => s.name),
-        datasets: [{
-          data: data.map(s => s.total),
-          backgroundColor: [
-            '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
-            '#8B5CF6', '#06B6D4', '#84CC16', '#F97316'
-          ],
-          borderWidth: 2,
-          borderColor: '#fff'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          title: {
-            display: true,
-            text: 'Gasto por Supermercado'
-          },
-          legend: {
-            position: 'bottom'
+      this.supermarketChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: data.map(s => s.name),
+          datasets: [{
+            data: data.map(s => s.total),
+            backgroundColor: [
+              '#3B82F6', '#10B981', '#F59E0B', '#EF4444', 
+              '#8B5CF6', '#06B6D4', '#84CC16', '#EC4899'
+            ],
+            borderColor: [
+              '#2563EB', '#059669', '#D97706', '#DC2626',
+              '#7C3AED', '#0891B2', '#65A30D', '#DB2777'
+            ],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 20,
+                usePointStyle: true
+              }
+            },
+            title: {
+              display: true,
+              text: this.translationService.translate('analytics.charts.supermarketDistribution.title')
+            }
           }
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.error('Error creating supermarket chart:', error);
+    }
   }
 
   createSavingsChart() {
@@ -459,8 +446,8 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewCheck
       return;
     }
     
-    if (!this.savingsChartRef) {
-      console.log('Savings chart ref not available, will retry...');
+    if (!this.savingsChartRef?.nativeElement) {
+      console.log('Savings chart ref not available');
       return;
     }
 
@@ -469,52 +456,56 @@ export class AnalyticsComponent implements OnInit, AfterViewInit, AfterViewCheck
       return;
     }
 
-    const ctx = this.savingsChartRef.nativeElement.getContext('2d');
-    if (!ctx) {
-      console.log('Cannot get canvas context for savings chart');
-      return;
-    }
+    try {
+      const ctx = this.savingsChartRef.nativeElement.getContext('2d');
+      if (!ctx) {
+        console.log('Cannot get canvas context for savings chart');
+        return;
+      }
 
-    const data = this.savingsData.savings_analysis.slice(0, 5); // Top 5 savings
-    console.log('Creating savings chart with data:', data);
+      const data = this.savingsData.savings_analysis.slice(0, 5); // Top 5 savings
+      console.log('Creating savings chart with data:', data);
 
-    this.savingsChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: data.map(s => s.product_name),
-        datasets: [{
-          label: 'Ahorro Potencial (€)',
-          data: data.map(s => s.potential_saving),
-          backgroundColor: '#10B981',
-          borderColor: '#059669',
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        indexAxis: 'y',
-        plugins: {
-          title: {
-            display: true,
-            text: 'Top 5 Productos con Mayor Ahorro Potencial'
-          },
-          legend: {
-            display: false
-          }
+      this.savingsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.map(s => s.product_name),
+          datasets: [{
+            label: this.translationService.translate('analytics.charts.savingsPotentialLabel'),
+            data: data.map(s => s.potential_saving),
+            backgroundColor: '#10B981',
+            borderColor: '#059669',
+            borderWidth: 1
+          }]
         },
-        scales: {
-          x: {
-            beginAtZero: true,
-            ticks: {
-              callback: function(value) {
-                return '€' + value;
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            title: {
+              display: true,
+              text: this.translationService.translate('analytics.charts.savingsPotential.title')
+            },
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '€' + value;
+                }
               }
             }
           }
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.error('Error creating savings chart:', error);
+    }
   }
 
   getTrendIcon(direction: string): string {
