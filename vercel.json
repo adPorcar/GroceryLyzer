@@ -1,15 +1,7 @@
 {
-  "builds": [
-    {
-      "src": "frontend/grocerylyzerfront/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist",
-        "buildCommand": "bun run build:vercel",
-        "installCommand": "bun install"
-      }
-    }
-  ],
+  "buildCommand": "cd frontend/grocerylyzerfront && bun install && bun run build:vercel",
+  "outputDirectory": "frontend/grocerylyzerfront/dist",
+  "installCommand": "echo 'Skipping root install'",
   "routes": [
     {
       "src": "/(.*)",
