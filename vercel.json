@@ -1,0 +1,19 @@
+{
+  "builds": [
+    {
+      "src": "frontend/grocerylyzerfront/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist",
+        "buildCommand": "bun run build:vercel",
+        "installCommand": "bun install"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
